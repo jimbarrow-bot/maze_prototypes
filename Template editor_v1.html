@@ -1,0 +1,2480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Template Editor — SafetyCulture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ─── Design Tokens ─────────────────────────────────────────────────── */
+:root {
+  --bg-weak:          #f8f9fc;
+  --bg-default:       #e9edf6;
+  --surface-bg:       #ffffff;
+  --surface-text:     #1f2533;
+  --surface-text-weak: #3f495a;
+  --surface-text-weaker: #545f70;
+  --surface-text-placeholder: #bfc6d4;
+  --surface-border:   #bfc6d4;
+  --accent-bg:        #675df4;
+  --accent-bg-alt:    #6559ff;
+  --accent-bg-pressed:#493ee0;
+  --accent-bg-weaker: #ecedfe;
+  --accent-border:    #564be7;
+  --accent-text:      #4740d4;
+  --accent-on:        #ffffff;
+  --info-hover:       #0e9eec;
+  --negative-text:    #a8242a;
+  --negative-border:  #a8242a;
+
+  --radius-full:   9999px;
+  --radius-medium: 12px;
+  --radius-small:  8px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --shadow-ai: 0px -4px 20px 0px rgba(101,89,255,0.1),
+               -4px -4px 20px 0px rgba(101,89,255,0.1),
+               -4px 4px 20px 0px rgba(14,138,216,0.1),
+               0px 4px 20px 0px rgba(14,138,216,0.1);
+}
+
+/* ─── Reset & Base ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; width: 100%; overflow: hidden; }
+body {
+  font-family: 'Noto Sans', sans-serif;
+  background: #fff;
+  color: var(--surface-text);
+  font-size: 16px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Form builder layout ─────────────────────────────────────────────── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: #fff;
+}
+
+.fb-topbar {
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid #e4e7ee;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  flex-shrink: 0;
+  gap: 0;
+  position: relative;
+}
+
+.fb-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.fb-back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #545f70;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: background 0.12s;
+}
+.fb-back-btn:hover { background: #f0f2f5; }
+
+.fb-form-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2533;
+  cursor: text;
+}
+
+.fb-saved-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7584;
+}
+
+.fb-saved-badge svg { color: #1a8c5b; }
+
+/* Center tabs */
+.fb-center-tabs {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0;
+}
+
+.fb-center-tab {
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7584;
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.fb-center-tab:hover { color: #1f2533; }
+.fb-center-tab.active { color: #675df4; border-bottom-color: #675df4; font-weight: 600; }
+
+/* Right actions */
+.fb-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.fb-icon-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #545f70;
+  transition: background 0.12s;
+}
+.fb-icon-btn:hover { background: #f0f2f5; }
+
+.fb-publish-btn {
+  background: #675df4;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 18px;
+  height: 34px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.fb-publish-btn:hover { background: #5a51e0; }
+
+/* ── Three-column body ───────────────────────────────────────────────── */
+.fb-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Left panel */
+.fb-left {
+  width: 304px;
+  min-width: 304px;
+  border-right: 1px solid #e4e7ee;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fb-panel-tabs {
+  display: flex;
+  border-bottom: 1px solid #e4e7ee;
+  flex-shrink: 0;
+}
+
+.fb-panel-tab {
+  flex: 1;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #6b7584;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.fb-panel-tab.active { color: #675df4; border-bottom-color: #675df4; font-weight: 600; }
+
+/* ── Ask panel ───────────────────────────────────────────────────────── */
+.fb-ask-header {
+  padding: 14px 14px 10px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #e4e7ee;
+}
+.fb-ask-header-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+}
+.fb-ask-sparkle {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(135deg,#675df4,#0e9eec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.fb-ask-header-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1f2533;
+}
+.fb-ask-header-sub {
+  font-size: 12px;
+  color: #6b7584;
+  line-height: 1.4;
+}
+
+.fb-ask-suggestions {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fb-ask-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid #e8eaf0;
+  background: #fff;
+  transition: border-color 0.15s, background 0.15s;
+}
+.fb-ask-item:hover { border-color: #c5c2f8; background: #f9f8ff; }
+.fb-ask-item.added { opacity: 0.45; pointer-events: none; }
+
+.fb-ask-item-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  flex: 1;
+}
+.fb-ask-type-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+.fb-badge-number { background: #e8f4ff; color: #1a6ecc; }
+.fb-badge-choice { background: #edfaf0; color: #1a7a3c; }
+.fb-badge-check  { background: #fff4e0; color: #a05c00; }
+.fb-badge-text   { background: #f3f0ff; color: #5140d4; }
+
+.fb-ask-item-body { flex: 1; }
+.fb-ask-item-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #1f2533;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+.fb-ask-item-type {
+  font-size: 11px;
+  color: #8891a1;
+  margin-top: 1px;
+}
+.fb-ask-add-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1.5px solid #d1d5de;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+  color: #675df4;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+}
+.fb-ask-add-btn:hover { border-color: #675df4; background: #f0effe; }
+
+.fb-ask-chat {
+  flex-shrink: 0;
+  border-top: 1px solid #e4e7ee;
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fb-ask-chat-messages {
+  max-height: 80px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: #3f495a;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fb-ask-msg-user {
+  align-self: flex-end;
+  background: #675df4;
+  color: #fff;
+  padding: 5px 9px;
+  border-radius: 10px 10px 2px 10px;
+  max-width: 90%;
+}
+.fb-ask-msg-ai {
+  align-self: flex-start;
+  background: #f0effe;
+  color: #1f2533;
+  padding: 5px 9px;
+  border-radius: 10px 10px 10px 2px;
+  max-width: 90%;
+}
+.fb-ask-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.fb-ask-input {
+  flex: 1;
+  height: 34px;
+  border: 1.5px solid #d8dce8;
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: #1f2533;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.fb-ask-input:focus { border-color: #675df4; }
+.fb-ask-send-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: #675df4;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.fb-ask-send-btn:hover { background: #493ee0; }
+
+/* ── AI describe input (bottom of Ask panel) ─────────────────────── */
+.fb-ask-compose {
+  flex-shrink: 0;
+  padding: 0 10px 10px;
+  background: transparent;
+}
+.fb-ask-compose-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid #d8dce8;
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  overflow: hidden;
+}
+.fb-ask-compose-wrap:focus-within {
+  border-color: #675df4;
+  box-shadow: 0 0 0 3px rgba(103,93,244,0.12);
+}
+.fb-ask-compose-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 10px 4px;
+}
+.fb-ask-compose-sparkle {
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.fb-ask-compose-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: #1f2533;
+  line-height: 1.45;
+  background: transparent;
+  min-height: 38px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+.fb-ask-compose-input::placeholder { color: #b0b8c8; }
+.fb-ask-compose-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 4px 8px 7px;
+}
+.fb-ask-compose-hint {
+  font-size: 11px;
+  color: #b0b8c8;
+  flex: 1;
+}
+.fb-ask-compose-send {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: none;
+  background: #675df4;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, opacity 0.15s;
+}
+.fb-ask-compose-send:hover { background: #493ee0; }
+.fb-ask-compose-send:disabled { opacity: 0.4; cursor: default; background: #675df4; }
+
+/* Generated suggestion chips that appear above the input */
+.fb-ask-generated {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.fb-ask-generated-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8891a1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* ── Card insert zones ───────────────────────────────────────────────── */
+.fb-insert-zone {
+  position: relative;
+  height: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: height 0.2s ease;
+  overflow: visible;
+}
+.fb-insert-zone:hover {
+  height: 36px;
+}
+.fb-insert-zone::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  margin-top: -1px;
+  height: 2px;
+  background: #675df4;
+  border-radius: 1px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s 0.05s;
+}
+.fb-insert-zone:hover::before { opacity: 1; }
+.fb-insert-btn {
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #675df4;
+  background: #fff;
+  color: #675df4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.15s 0.05s, transform 0.2s ease;
+}
+.fb-insert-zone:hover .fb-insert-btn { opacity: 1; transform: scale(1); }
+.fb-insert-btn.active { background: #675df4; color: #fff; opacity: 1; transform: scale(1); }
+
+/* ── Insert dropdown ─────────────────────────────────────────────────── */
+.fb-insert-dd {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
+  padding: 5px;
+  z-index: 9999;
+  width: 210px;
+  display: none;
+}
+.fb-insert-dd.open {
+  display: block;
+  animation: insertDdIn 0.13s ease;
+}
+@keyframes insertDdIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fb-insert-dd-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8891a1;
+  padding: 4px 9px 6px;
+}
+
+.fb-insert-dd-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2533;
+  transition: background 0.1s, color 0.1s;
+}
+.fb-insert-dd-item:hover { background: #f5f4ff; color: #675df4; }
+.fb-insert-dd-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f0effe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #675df4;
+}
+
+.fb-add-btns {
+  padding: 10px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  border-top: 1px solid #e4e7ee;
+  margin-top: 4px;
+}
+
+.fb-add-section-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  border: 1.5px solid #d8dce8;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3f495a;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.fb-add-section-btn:hover { border-color: #675df4; color: #675df4; background: #f5f4ff; }
+
+.fb-add-question-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #675df4;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.fb-add-question-btn:hover { background: #5a51e0; }
+
+.fb-components-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 4px;
+}
+
+.fb-comp-category {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8891a1;
+  padding: 14px 10px 4px;
+}
+
+.fb-comp-category-divider {
+  height: 1px;
+  background: #e4e7ee;
+  margin: 6px 10px 2px;
+}
+
+.fb-component-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #3f495a;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background 0.12s;
+  user-select: none;
+}
+.fb-component-item:hover { background: #f5f4ff; color: #675df4; }
+.fb-component-item:hover .fb-comp-icon { border-color: #675df4; color: #675df4; }
+.fb-component-item:active { cursor: grabbing; }
+
+.fb-comp-icon {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid #e4e7ee;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #675df4;
+  transition: border-color 0.12s;
+}
+
+/* Center canvas */
+.fb-canvas {
+  flex: 1;
+  background: #eef0f6;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+}
+
+.fb-page-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: #e8eaf0;
+  border-bottom: 1px solid #dde0e8;
+  flex-shrink: 0;
+}
+
+.fb-page-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #545f70;
+  cursor: pointer;
+}
+
+.fb-page-score {
+  font-size: 13px;
+  color: #6b7584;
+}
+
+.fb-page-name-wrap {
+  width: 100%;
+  max-width: 600px;
+  align-self: center;
+  padding: 16px 24px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+.fb-page-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2533;
+  cursor: text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 40px);
+}
+.fb-page-name-edit-btn {
+  opacity: 0;
+  pointer-events: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1.5px solid #dddff0;
+  background: #fff;
+  color: #675df4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s, background 0.15s, border-color 0.15s;
+  box-shadow: 0 1px 4px rgba(103,93,244,0.10);
+  padding: 0;
+}
+.fb-page-name-wrap:hover .fb-page-name-edit-btn {
+  opacity: 1;
+  pointer-events: all;
+}
+.fb-page-name-edit-btn:hover {
+  background: #f5f4ff;
+  border-color: #675df4;
+}
+.fb-page-name-input {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2533;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  width: 100%;
+  padding: 0;
+  caret-color: #675df4;
+  flex: 1;
+}
+.fb-page-name-wrap.editing .fb-page-name-edit-btn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fb-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-width: 560px;
+  padding: 8px 0 0;
+}
+
+/* Question card */
+.fb-question-card {
+  background: #fff;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 18px 20px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+
+.fb-question-card:hover {
+  border-color: #c4bffa;
+}
+
+.fb-question-card.selected {
+  border-color: #675df4;
+  box-shadow: 0 0 0 3px rgba(103,93,244,0.1);
+}
+
+.fb-card-delete {
+  position: absolute;
+  right: -44px;
+  top: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1.5px solid #dddff0;
+  background: #fff;
+  color: #675df4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 6px rgba(103,93,244,0.10);
+}
+.fb-question-card.selected .fb-card-delete {
+  opacity: 1;
+  pointer-events: all;
+}
+.fb-card-delete:hover {
+  background: #fff0f0;
+  color: #a8242a;
+  border-color: #f0b8b8;
+  box-shadow: 0 1px 6px rgba(168,36,42,0.10);
+}
+
+.fb-question-card.required-flag {
+  border-left: 3.5px solid #c0462a;
+  border-radius: 0 10px 10px 0;
+}
+
+.fb-question-card.required-flag.selected {
+  border-left-color: #c0462a;
+  border-top-color: #675df4;
+  border-right-color: #675df4;
+  border-bottom-color: #675df4;
+}
+
+.fb-q-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2533;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+.fb-q-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+  position: relative;
+}
+.fb-q-label-input {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2533;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  field-sizing: content;
+  min-width: 30px;
+  max-width: calc(100% - 34px);
+  padding: 0;
+  cursor: text;
+  caret-color: #675df4;
+}
+.fb-q-label-input::placeholder {
+  color: #bfc6d4;
+  font-weight: 600;
+}
+.fb-q-label-input:focus {
+  color: #1f2533;
+  border-bottom: 2px solid #675df4;
+  padding-bottom: 1px;
+}
+.fb-q-label-input::selection {
+  background: #d4d1fc;
+  color: #1f2533;
+}
+
+/* ─── Right panel: options section ─────────────────────────────────── */
+.fb-options-section {
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+.fb-option-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.fb-option-radio {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #d0d4de;
+  flex-shrink: 0;
+  background: #fff;
+}
+.fb-option-input {
+  flex: 1;
+  font-size: 13px;
+  color: #1f2533;
+  border: none;
+  border-bottom: 1.5px solid #e4e7ee;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  padding: 3px 0;
+  caret-color: #675df4;
+}
+.fb-option-input:focus {
+  border-bottom-color: #675df4;
+}
+.fb-option-delete {
+  opacity: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #8891a1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+.fb-option-row:hover .fb-option-delete {
+  opacity: 1;
+}
+.fb-option-delete:hover {
+  color: #a8242a;
+  background: #fef2f2;
+}
+.fb-add-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #675df4;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: inherit;
+  margin-top: 4px;
+}
+.fb-add-option-btn:hover {
+  color: #493ee0;
+}
+/* fb-q-label used for required-star rows: keep mb on the container */
+.fb-q-label {
+  margin-bottom: 10px;
+}
+
+.fb-req-star { color: #c0462a; }
+
+.fb-q-input {
+  width: 100%;
+  border: 1.5px solid #e4e7ee;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: #1f2533;
+  outline: none;
+  transition: border-color 0.15s;
+  background: #fff;
+}
+.fb-q-input:focus { border-color: #675df4; }
+
+.fb-q-date-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1.5px solid #e4e7ee;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  color: #3f495a;
+  background: #f8f9fc;
+  cursor: pointer;
+}
+
+.fb-q-select-btn {
+  width: 100%;
+  background: #675df4;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.fb-q-helper {
+  font-size: 11.5px;
+  color: #8c95a6;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.fb-q-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f2f5;
+}
+
+.fb-q-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #6b7584;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+  transition: color 0.12s;
+}
+.fb-q-action-btn:hover { color: #675df4; }
+
+/* Right panel */
+.fb-right {
+  width: 280px;
+  min-width: 280px;
+  border-left: 1px solid #e4e7ee;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fb-right-tabs {
+  display: flex;
+  border-bottom: 1px solid #e4e7ee;
+  flex-shrink: 0;
+}
+
+.fb-right-tab {
+  flex: 1;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #6b7584;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s;
+}
+.fb-right-tab.active { color: #675df4; border-bottom-color: #675df4; font-weight: 600; }
+
+.fb-right-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 24px;
+}
+
+.fb-field-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #6b7584;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+.fb-field-label:first-child { margin-top: 0; }
+
+.fb-field-input {
+  width: 100%;
+  border: 1.5px solid #e4e7ee;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: #1f2533;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.fb-field-input:focus { border-color: #675df4; }
+
+.fb-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.fb-settings-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2533;
+}
+
+.fb-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+}
+
+.fb-setting-row.indented {
+  padding-left: 20px;
+}
+
+.fb-setting-name {
+  font-size: 13.5px;
+  color: #3f495a;
+}
+
+/* Custom checkbox for settings */
+.fb-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 2px solid #675df4;
+  background: #675df4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.fb-checkbox.partial {
+  background: #675df4;
+  border-color: #675df4;
+}
+
+.fb-checkbox.unchecked {
+  background: #fff;
+  border-color: #d8dce8;
+}
+
+/* ── Page navigator button + dropdown ───────────────────────────────── */
+.fb-page-nav-wrap {
+  position: relative;
+}
+.fb-page-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px 0 12px;
+  border: 1.5px solid #d0d4e0;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3f495a;
+  cursor: pointer;
+  font-family: inherit;
+  user-select: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+.fb-page-btn:hover {
+  border-color: #675df4;
+  color: #675df4;
+  background: #f5f4ff;
+}
+.fb-page-btn.open {
+  border-color: #675df4;
+  color: #675df4;
+  background: #f5f4ff;
+  box-shadow: 0 0 0 3px rgba(103,93,244,0.12);
+}
+.fb-page-btn-chevron {
+  transition: transform 0.18s ease;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.fb-page-btn.open .fb-page-btn-chevron {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+.fb-page-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  z-index: 999;
+  overflow: hidden;
+  padding: 4px 0;
+}
+.fb-page-dropdown-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  border-top: 1px solid #f0f2f7;
+  background: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #675df4;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  margin-top: 4px;
+  transition: background 0.1s;
+}
+.fb-page-dropdown-add:hover { background: #f5f4ff; }
+.fb-page-btn.open + .fb-page-dropdown {
+  display: block;
+  animation: pageDropIn 0.14s ease;
+}
+@keyframes pageDropIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fb-page-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: #3f495a;
+  font-weight: 500;
+  transition: background 0.1s, color 0.1s;
+}
+.fb-page-item:hover { background: #f5f4ff; color: #1f2533; }
+.fb-page-item.active {
+  color: #675df4;
+  font-weight: 600;
+}
+.fb-page-item.active .fb-page-item-num {
+  background: #675df4;
+  color: #fff;
+}
+.fb-page-item-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: #eaecf2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #545f70;
+  flex-shrink: 0;
+}
+.fb-page-content {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 40px;
+}
+.fb-page-content.active {
+  display: flex;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Top bar -->
+  <div class="fb-topbar">
+    <div class="fb-topbar-left">
+      <button class="fb-back-btn" title="Back">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l-6 5 6 5"/></svg>
+      </button>
+      <span class="fb-form-title">Forklift truck daily check</span>
+      <span class="fb-saved-badge">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 8 14 16 6"/></svg>
+        Saved
+      </span>
+    </div>
+
+    <!-- Center tabs -->
+    <div class="fb-center-tabs">
+      <div class="fb-center-tab active">Build</div>
+      <div class="fb-center-tab">Report</div>
+      <div class="fb-center-tab">Schedule</div>
+    </div>
+
+    <div class="fb-topbar-right">
+      <button class="fb-icon-btn" title="Undo">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7H13a5 5 0 0 1 0 10H7"/><polyline points="7 3 3 7 7 11"/></svg>
+      </button>
+      <button class="fb-icon-btn" title="Redo">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7H7a5 5 0 0 0 0 10h6"/><polyline points="13 3 17 7 13 11"/></svg>
+      </button>
+      <button class="fb-icon-btn" title="More options">
+        <svg width="16" height="16" viewBox="0 0 20 20"><circle cx="10" cy="5" r="1.3" fill="currentColor"/><circle cx="10" cy="10" r="1.3" fill="currentColor"/><circle cx="10" cy="15" r="1.3" fill="currentColor"/></svg>
+      </button>
+      <button class="fb-publish-btn" onclick="alert('Published!')">Publish</button>
+    </div>
+  </div>
+
+  <!-- Three-column body -->
+  <div class="fb-body">
+
+    <!-- Left panel: components -->
+    <div class="fb-left">
+      <div class="fb-panel-tabs">
+        <div class="fb-panel-tab" onclick="switchFbTab('ask')" id="fb-tab-ask">Suggestions</div>
+        <div class="fb-panel-tab active" onclick="switchFbTab('add')" id="fb-tab-add">Add</div>
+      </div>
+
+      <!-- ── SUGGESTIONS PANEL ────────────────────────────────────── -->
+      <div id="fb-ask-panel" style="display:none; flex-direction:column; flex:1; overflow-y:auto; min-height:0;">
+
+        <!-- AI header -->
+        <div class="fb-ask-header">
+          <div class="fb-ask-header-row">
+            <div class="fb-ask-sparkle">
+              <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                <path d="M10 2 L11.2 7.8 L17 9 L11.2 10.2 L10 16 L8.8 10.2 L3 9 L8.8 7.8 Z" fill="#675df4"/>
+                <path d="M16 3 L16.6 5.4 L19 6 L16.6 6.6 L16 9 L15.4 6.6 L13 6 L15.4 5.4 Z" fill="#0e9eec" opacity="0.7"/>
+              </svg>
+            </div>
+            <span class="fb-ask-header-title">AI suggestions</span>
+          </div>
+          <p class="fb-ask-header-sub">Based on your forklift daily check, here are questions to add.</p>
+        </div>
+
+        <!-- Suggested questions list -->
+        <div class="fb-ask-suggestions" id="fb-ask-suggestions">
+
+          <div class="fb-ask-item" id="fb-ask-q1">
+            <div class="fb-ask-item-left">
+              <div class="fb-ask-type-badge fb-badge-number">123</div>
+              <div class="fb-ask-item-body">
+                <div class="fb-ask-item-label">Check tyre pressure</div>
+                <div class="fb-ask-item-type">Number · PSI</div>
+              </div>
+            </div>
+            <button class="fb-ask-add-btn" onclick="addSuggestedQuestion('fb-ask-q1','Check tyre pressure','number')">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+            </button>
+          </div>
+
+          <div class="fb-ask-item" id="fb-ask-q2">
+            <div class="fb-ask-item-left">
+              <div class="fb-ask-type-badge fb-badge-choice">✓✗</div>
+              <div class="fb-ask-item-body">
+                <div class="fb-ask-item-label">Engine oil level — satisfactory?</div>
+                <div class="fb-ask-item-type">Multiple choice · Pass / Fail</div>
+              </div>
+            </div>
+            <button class="fb-ask-add-btn" onclick="addSuggestedQuestion('fb-ask-q2','Engine oil level — satisfactory?','choice')">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+            </button>
+          </div>
+
+          <div class="fb-ask-item" id="fb-ask-q3">
+            <div class="fb-ask-item-left">
+              <div class="fb-ask-type-badge fb-badge-choice">✓✗</div>
+              <div class="fb-ask-item-body">
+                <div class="fb-ask-item-label">Hydraulic fluid level — satisfactory?</div>
+                <div class="fb-ask-item-type">Multiple choice · Pass / Fail</div>
+              </div>
+            </div>
+            <button class="fb-ask-add-btn" onclick="addSuggestedQuestion('fb-ask-q3','Hydraulic fluid level — satisfactory?','choice')">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+            </button>
+          </div>
+
+          <div class="fb-ask-item" id="fb-ask-q4">
+            <div class="fb-ask-item-left">
+              <div class="fb-ask-type-badge fb-badge-check">☑</div>
+              <div class="fb-ask-item-body">
+                <div class="fb-ask-item-label">Lights and horn functioning</div>
+                <div class="fb-ask-item-type">Checkbox</div>
+              </div>
+            </div>
+            <button class="fb-ask-add-btn" onclick="addSuggestedQuestion('fb-ask-q4','Lights and horn functioning','checkbox')">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+            </button>
+          </div>
+
+          <div class="fb-ask-item" id="fb-ask-q5">
+            <div class="fb-ask-item-left">
+              <div class="fb-ask-type-badge fb-badge-choice">✓✗</div>
+              <div class="fb-ask-item-body">
+                <div class="fb-ask-item-label">Forks and mast — any damage?</div>
+                <div class="fb-ask-item-type">Multiple choice · Yes / No</div>
+              </div>
+            </div>
+            <button class="fb-ask-add-btn" onclick="addSuggestedQuestion('fb-ask-q5','Forks and mast — any damage?','choice')">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+            </button>
+          </div>
+
+          <div class="fb-ask-item" id="fb-ask-q6">
+            <div class="fb-ask-item-left">
+              <div class="fb-ask-type-badge fb-badge-number">123</div>
+              <div class="fb-ask-item-body">
+                <div class="fb-ask-item-label">Fuel / battery level</div>
+                <div class="fb-ask-item-type">Number · %</div>
+              </div>
+            </div>
+            <button class="fb-ask-add-btn" onclick="addSuggestedQuestion('fb-ask-q6','Fuel / battery level','number')">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+            </button>
+          </div>
+
+          <div class="fb-ask-item" id="fb-ask-q7">
+            <div class="fb-ask-item-left">
+              <div class="fb-ask-type-badge fb-badge-check">☑</div>
+              <div class="fb-ask-item-body">
+                <div class="fb-ask-item-label">Seatbelt present and functional</div>
+                <div class="fb-ask-item-type">Checkbox</div>
+              </div>
+            </div>
+            <button class="fb-ask-add-btn" onclick="addSuggestedQuestion('fb-ask-q7','Seatbelt present and functional','checkbox')">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+            </button>
+          </div>
+
+          <div class="fb-ask-item" id="fb-ask-q8">
+            <div class="fb-ask-item-left">
+              <div class="fb-ask-type-badge fb-badge-text">T</div>
+              <div class="fb-ask-item-body">
+                <div class="fb-ask-item-label">Additional observations</div>
+                <div class="fb-ask-item-type">Text · Long answer</div>
+              </div>
+            </div>
+            <button class="fb-ask-add-btn" onclick="addSuggestedQuestion('fb-ask-q8','Additional observations','text')">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+            </button>
+          </div>
+
+        </div><!-- /fb-ask-suggestions -->
+
+        <!-- AI describe input — sits directly below suggested questions -->
+        <div class="fb-ask-compose">
+          <div class="fb-ask-compose-wrap">
+            <div class="fb-ask-compose-inner">
+              <svg class="fb-ask-compose-sparkle" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 2 L11.2 7.8 L17 9 L11.2 10.2 L10 16 L8.8 10.2 L3 9 L8.8 7.8 Z" fill="#675df4"/>
+                <path d="M16 3 L16.6 5.4 L19 6 L16.6 6.6 L16 9 L15.4 6.6 L13 6 L15.4 5.4 Z" fill="#0e9eec" opacity="0.7"/>
+              </svg>
+              <textarea
+                class="fb-ask-compose-input"
+                id="fb-ask-describe"
+                placeholder="Describe what you want to capture…"
+                rows="2"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();generateAiSuggestions();}"
+                oninput="document.getElementById('fb-compose-send').disabled=!this.value.trim();"
+              ></textarea>
+            </div>
+            <div class="fb-ask-compose-footer">
+              <span class="fb-ask-compose-hint">↵ to generate</span>
+              <button class="fb-ask-compose-send" id="fb-compose-send" onclick="generateAiSuggestions()" disabled>
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="16" x2="10" y2="4"/><polyline points="5 9 10 4 15 9"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generated suggestions appear below the input -->
+        <div class="fb-ask-generated" id="fb-ask-generated" style="display:none; padding: 0 10px 10px;">
+          <div class="fb-ask-generated-label">Generated suggestions</div>
+        </div>
+
+      </div><!-- /fb-ask-panel -->
+
+      <!-- ── ADD PANEL ─────────────────────────────────────────────── -->
+      <div id="fb-add-panel" style="display:flex; flex-direction:column; flex:1; overflow-y:auto; min-height:0;">
+
+        <div class="fb-components-list">
+
+          <!-- Standard question types -->
+          <div class="fb-comp-category">Standard questions</div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('choice','Multiple choice')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg></div>
+            Multiple choice
+          </div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('text','Text')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h14M3 10h10M3 15h7"/></svg></div>
+            Text
+          </div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('number','Number')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17V7l-2 2M11 8h4a2 2 0 0 1 0 4h-4v3h4.5"/></svg></div>
+            Number
+          </div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('checkbox','Checkbox')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="3"/><polyline points="7 10 9 12 13 8"/></svg></div>
+            Checkbox
+          </div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('date','Date &amp; Time')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="16" height="14" rx="2"/><path d="M14 2v4M6 2v4M2 10h16"/></svg></div>
+            Date &amp; Time
+          </div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('media','Media')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="7.5" cy="7.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            Media
+          </div>
+
+          <!-- Connected questions -->
+          <div class="fb-comp-category-divider"></div>
+          <div class="fb-comp-category">Connected questions</div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('location','Inspection location')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C6.7 2 4 4.7 4 8c0 4.5 6 10 6 10s6-5.5 6-10c0-3.3-2.7-6-6-6z"/><circle cx="10" cy="8" r="2"/></svg></div>
+            Inspection location
+          </div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('questionbank','Question bank')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 7h6M7 10h6M7 13h4"/><path d="M17 7l-2 2 2 2" stroke-width="1.4"/></svg></div>
+            Question bank
+          </div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('site','Site')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c0-3 2-5 5-5h4c3 0 5 2 5 5"/><rect x="6" y="3" width="8" height="7" rx="2"/></svg></div>
+            Site
+          </div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('person','Person')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7" r="4"/><path d="M3 18c0-3.3 3.1-6 7-6s7 2.7 7 6"/></svg></div>
+            Person
+          </div>
+          <div class="fb-component-item" onclick="addComponentToCanvas('asset','Asset')">
+            <div class="fb-comp-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M6 7V5a4 4 0 0 1 8 0v2"/><line x1="10" y1="12" x2="10" y2="14"/></svg></div>
+            Asset
+          </div>
+
+        </div>
+
+        <!-- Structure buttons below the component list -->
+        <div class="fb-add-btns">
+          <button class="fb-add-section-btn">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+            Add section
+          </button>
+          <button class="fb-add-section-btn" onclick="addPage()">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="16" height="14" rx="2"/><path d="M2 8h16"/></svg>
+            Add page
+          </button>
+          <button class="fb-add-section-btn">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="16" height="12" rx="2"/><path d="M2 8h16M7 4v12"/></svg>
+            Add table
+          </button>
+        </div>
+
+      </div><!-- /fb-add-panel -->
+
+    </div>
+
+    <!-- Center canvas -->
+    <div class="fb-canvas">
+
+      <!-- Page navigator bar -->
+      <div class="fb-page-bar">
+        <div class="fb-page-nav-wrap">
+          <button class="fb-page-btn" id="fb-page-btn" onclick="togglePageAccordion(event)">
+            <svg class="fb-page-btn-chevron" width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l5 5 5-5"/></svg>
+            <span id="fb-page-counter">Page 1 of 1</span>
+          </button>
+          <div class="fb-page-dropdown" id="fb-page-dropdown">
+            <div class="fb-page-item active" id="fb-page-item-1" onclick="switchPage(event,1)">
+              <div class="fb-page-item-num">1</div>
+              <span>Untitled page</span>
+            </div>
+            <button class="fb-page-dropdown-add" onclick="addPageFromDropdown(event)">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+              Add page
+            </button>
+          </div>
+        </div>
+        <div class="fb-page-score">Score &nbsp; 0 / 1 (69%)</div>
+      </div>
+
+      <!-- Page 1 content -->
+      <div class="fb-page-content active" id="fb-page-content-1">
+        <div class="fb-page-name-wrap" id="fb-page-name-wrap-1">
+          <span class="fb-page-name" id="fb-page-name-1" onclick="editPageName(1)">Untitled page</span>
+          <button class="fb-page-name-edit-btn" onclick="editPageName(1)" title="Rename page">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2.5a2.121 2.121 0 0 1 3 3L6 17H3v-3L14.5 2.5z"/></svg>
+          </button>
+        </div>
+        <div class="fb-questions" id="fb-questions-1">
+
+          <div class="fb-insert-zone"><button class="fb-insert-btn" onclick="openInsertDropdown(event,this)"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg></button></div>
+
+        <!-- Card 1: Date of inspection (selected by default) -->
+        <div class="fb-question-card selected" id="fb-card-1" onclick="selectFbCard(1)">
+          <button class="fb-card-delete" onclick="deleteFbCard(event,this.parentElement)" title="Delete question"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h14"/><path d="M8 6V4h4v2"/><path d="M5 6l1 11a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-11"/><line x1="8" y1="10" x2="8" y2="15"/><line x1="12" y1="10" x2="12" y2="15"/></svg></button>
+          <div class="fb-q-label-wrap">
+            <input class="fb-q-label-input" id="fb-card-label-1" value="Date of inspection" placeholder="Question title" oninput="syncCardTitleFromCard(this,1)" onclick="event.stopPropagation();selectFbCard(1);">          </div>
+          <div class="fb-q-date-picker">
+            17 Dec 2022 at 4:20 pm
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l3 3 3-3"/></svg>
+          </div>
+          <div class="fb-q-actions">
+            <button class="fb-q-action-btn">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v14l4-2 4 2 4-2V4a2 2 0 0 0-2-2z"/></svg>
+              Note
+            </button>
+            <button class="fb-q-action-btn">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="7.5" cy="7.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Media
+            </button>
+            <button class="fb-q-action-btn">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Action
+            </button>
+          </div>
+        </div>
+
+        <div class="fb-insert-zone"><button class="fb-insert-btn" onclick="openInsertDropdown(event,this)"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg></button></div>
+
+        <!-- Card 2: Site conducted (required) -->
+        <div class="fb-question-card required-flag" id="fb-card-2" onclick="selectFbCard(2)">
+          <button class="fb-card-delete" onclick="deleteFbCard(event,this.parentElement)" title="Delete question"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h14"/><path d="M8 6V4h4v2"/><path d="M5 6l1 11a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-11"/><line x1="8" y1="10" x2="8" y2="15"/><line x1="12" y1="10" x2="12" y2="15"/></svg></button>
+          <div class="fb-q-label">
+            <span class="fb-req-star">*</span>
+            <input class="fb-q-label-input" id="fb-card-label-2" value="Site conducted" placeholder="Question title" oninput="syncCardTitleFromCard(this,2)" onclick="event.stopPropagation();selectFbCard(2);">          </div>
+          <button class="fb-q-select-btn">Select site</button>
+          <div class="fb-q-actions">
+            <button class="fb-q-action-btn">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v14l4-2 4 2 4-2V4a2 2 0 0 0-2-2z"/></svg>
+              Note
+            </button>
+            <button class="fb-q-action-btn">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="7.5" cy="7.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Media
+            </button>
+            <button class="fb-q-action-btn">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Action
+            </button>
+          </div>
+        </div>
+
+        <div class="fb-insert-zone"><button class="fb-insert-btn" onclick="openInsertDropdown(event,this)"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg></button></div>
+
+        <!-- Card 3: Document number -->
+        <div class="fb-question-card" id="fb-card-3" onclick="selectFbCard(3)">
+          <button class="fb-card-delete" onclick="deleteFbCard(event,this.parentElement)" title="Delete question"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h14"/><path d="M8 6V4h4v2"/><path d="M5 6l1 11a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-11"/><line x1="8" y1="10" x2="8" y2="15"/><line x1="12" y1="10" x2="12" y2="15"/></svg></button>
+          <div class="fb-q-label-wrap">
+            <input class="fb-q-label-input" id="fb-card-label-3" value="Document number" placeholder="Question title" oninput="syncCardTitleFromCard(this,3)" onclick="event.stopPropagation();selectFbCard(3);">          </div>
+          <input class="fb-q-input" type="text" placeholder="Leave blank to auto-generate">
+          <div class="fb-q-helper">A unique document number will be automatically generated if you leave it blank, or you can add a number manually to override it.</div>
+          <div class="fb-q-actions">
+            <button class="fb-q-action-btn">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v14l4-2 4 2 4-2V4a2 2 0 0 0-2-2z"/></svg>
+              Note
+            </button>
+            <button class="fb-q-action-btn">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="7.5" cy="7.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Media
+            </button>
+            <button class="fb-q-action-btn">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Action
+            </button>
+          </div>
+        </div>
+
+        <div class="fb-insert-zone"><button class="fb-insert-btn" onclick="openInsertDropdown(event,this)"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg></button></div>
+
+        </div><!-- /fb-questions-1 -->
+      </div><!-- /fb-page-content-1 -->
+
+    </div><!-- /fb-canvas -->
+
+    <!-- Right panel: settings -->
+    <div class="fb-right">
+      <div class="fb-right-tabs">
+        <div class="fb-right-tab active">Edit</div>
+        <div class="fb-right-tab">Logic</div>
+      </div>
+
+      <div class="fb-right-body" id="fb-right-body">
+        <div class="fb-field-label">Question</div>
+        <input class="fb-field-input" type="text" id="fb-question-name" value="Date of inspection">
+
+        <div id="fb-options-section"></div>
+
+        <div class="fb-settings-header">
+          <span class="fb-settings-title">Settings</span>
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l5 5 5-5"/></svg>
+        </div>
+
+        <div id="fb-settings-rows">
+          <!-- Populated by selectFbCard() -->
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /fb-body -->
+
+</div><!-- /app -->
+
+<!-- Insert question type dropdown (global, positioned by JS) -->
+<div class="fb-insert-dd" id="fb-insert-dd">
+  <div class="fb-insert-dd-title">Quick add</div>
+  <div class="fb-insert-dd-item" onclick="insertCardFromDropdown('choice','Multiple choice')">
+    <div class="fb-insert-dd-icon">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3" fill="currentColor" stroke="none"/></svg>
+    </div>
+    Multiple choice
+  </div>
+  <div class="fb-insert-dd-item" onclick="insertCardFromDropdown('text','Text')">
+    <div class="fb-insert-dd-icon">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5h14M3 10h10M3 15h12"/></svg>
+    </div>
+    Text
+  </div>
+  <div class="fb-insert-dd-item" onclick="insertCardFromDropdown('number','Number')">
+    <div class="fb-insert-dd-icon">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17V7l-2 2M11 8h3a2 2 0 0 1 0 4h-3v3h3.5"/></svg>
+    </div>
+    Number
+  </div>
+  <div class="fb-insert-dd-item" onclick="insertCardFromDropdown('instruction','Instruction')">
+    <div class="fb-insert-dd-icon">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 10h6M7 13h4"/><circle cx="10" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg>
+    </div>
+    Instruction
+  </div>
+</div>
+
+<script>
+/* ── Form builder card data ──────────────────────────────────────────── */
+const fbCardData = {
+  1: {
+    name: 'Date of inspection',
+    settings: [
+      { label: 'Date',              state: 'checked' },
+      { label: 'Time',              state: 'checked' },
+      { label: 'Required',          state: 'checked' },
+      { label: 'Allow attachments', state: 'partial' },
+      { label: 'Notes',             state: 'checked', indent: true },
+      { label: 'Media',             state: 'checked', indent: true },
+      { label: 'Action',            state: 'checked', indent: true },
+    ]
+  },
+  2: {
+    name: 'Site conducted',
+    settings: [
+      { label: 'Required',          state: 'checked' },
+      { label: 'Allow attachments', state: 'partial' },
+      { label: 'Notes',             state: 'checked', indent: true },
+      { label: 'Media',             state: 'unchecked', indent: true },
+      { label: 'Action',            state: 'checked', indent: true },
+    ]
+  },
+  3: {
+    name: 'Document number',
+    settings: [
+      { label: 'Auto-generate',     state: 'checked' },
+      { label: 'Required',          state: 'unchecked' },
+      { label: 'Allow attachments', state: 'unchecked' },
+      { label: 'Notes',             state: 'unchecked', indent: true },
+      { label: 'Media',             state: 'unchecked', indent: true },
+      { label: 'Action',            state: 'unchecked', indent: true },
+    ]
+  }
+};
+
+/* ── Tab switching ────────────────────────────────────────────────────── */
+function switchFbTab(tab) {
+  const isAsk = tab === 'ask';
+  document.getElementById('fb-ask-panel').style.display = isAsk ? 'flex' : 'none';
+  document.getElementById('fb-add-panel').style.display = isAsk ? 'none' : 'flex';
+  document.getElementById('fb-tab-ask').classList.toggle('active', isAsk);
+  document.getElementById('fb-tab-add').classList.toggle('active', !isAsk);
+}
+
+/* ── Card counter ─────────────────────────────────────────────────────── */
+let fbNextCardId = 4;
+let fbSelectedCard = null;
+
+/* ── Page management ─────────────────────────────────────────────────── */
+const fbPages = [{ id: 1, name: 'Untitled page' }];
+let fbActivePage = 1;
+let fbNextPageId = 2;
+
+function getActiveQuestionsEl() {
+  return document.getElementById('fb-questions-' + fbActivePage);
+}
+
+function togglePageAccordion(event) {
+  if (event) event.stopPropagation();
+  document.getElementById('fb-page-btn').classList.toggle('open');
+}
+
+function switchPage(event, pageId) {
+  event.stopPropagation();
+  fbActivePage = pageId;
+
+  // Show the correct page content
+  document.querySelectorAll('.fb-page-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('fb-page-content-' + pageId).classList.add('active');
+
+  // Highlight the correct dropdown item
+  document.querySelectorAll('.fb-page-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('fb-page-item-' + pageId).classList.add('active');
+
+  updatePageCounter();
+  // Close the dropdown
+  document.getElementById('fb-page-btn').classList.remove('open');
+}
+
+function addPage() {
+  const pageId = fbNextPageId++;
+  const pageName = 'Untitled page';
+  fbPages.push({ id: pageId, name: pageName });
+
+  // Create the page content block
+  const canvas = document.querySelector('.fb-canvas');
+  const pageContent = document.createElement('div');
+  pageContent.className = 'fb-page-content';
+  pageContent.id = 'fb-page-content-' + pageId;
+  const defaultCardId = fbNextCardId++;
+  fbCardData[defaultCardId] = {
+    name: 'Untitled Multiple choice',
+    type: 'choice',
+    options: ['Option 1', 'Option 2'],
+    settings: [
+      { label: 'Required', state: 'unchecked' },
+      { label: 'Flagged',  state: 'unchecked' },
+      { label: 'Score',    state: 'unchecked' },
+    ]
+  };
+
+  pageContent.innerHTML = `
+    <div class="fb-page-name-wrap" id="fb-page-name-wrap-${pageId}">
+      <span class="fb-page-name" id="fb-page-name-${pageId}" onclick="editPageName(${pageId})">${pageName}</span>
+      <button class="fb-page-name-edit-btn" onclick="editPageName(${pageId})" title="Rename page">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2.5a2.121 2.121 0 0 1 3 3L6 17H3v-3L14.5 2.5z"/></svg>
+      </button>
+    </div>
+    <div class="fb-questions" id="fb-questions-${pageId}">
+      <div class="fb-insert-zone"><button class="fb-insert-btn" onclick="openInsertDropdown(event,this)"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg></button></div>
+      <div class="fb-question-card selected" id="fb-card-${defaultCardId}" onclick="selectFbCard(${defaultCardId})">
+        <button class="fb-card-delete" onclick="deleteFbCard(event,this.parentElement)" title="Delete question"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h14"/><path d="M8 6V4h4v2"/><path d="M5 6l1 11a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-11"/><line x1="8" y1="10" x2="8" y2="15"/><line x1="12" y1="10" x2="12" y2="15"/></svg></button>
+        <div class="fb-q-label-wrap">
+          <input class="fb-q-label-input" id="fb-card-label-${defaultCardId}" value="Untitled Multiple choice" placeholder="Question title" oninput="syncCardTitleFromCard(this,${defaultCardId})" onclick="event.stopPropagation();selectFbCard(${defaultCardId});">
+            </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #d0d4de;flex-shrink:0;background:#fff;"></div>
+            <span style="font-size:13px;color:#bfc6d4">Option 1</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #d0d4de;flex-shrink:0;background:#fff;"></div>
+            <span style="font-size:13px;color:#bfc6d4">Option 2</span>
+          </div>
+        </div>
+        <div class="fb-q-actions">
+          <button class="fb-q-action-btn"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v14l4-2 4 2 4-2V4a2 2 0 0 0-2-2z"/></svg> Note</button>
+          <button class="fb-q-action-btn"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="7.5" cy="7.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Media</button>
+          <button class="fb-q-action-btn"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Action</button>
+        </div>
+      </div>
+      <div class="fb-insert-zone"><button class="fb-insert-btn" onclick="openInsertDropdown(event,this)"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg></button></div>
+    </div>`;
+  canvas.appendChild(pageContent);
+
+  // Add item to the dropdown list
+  const list = document.getElementById('fb-page-dropdown');
+  const item = document.createElement('div');
+  item.className = 'fb-page-item';
+  item.id = 'fb-page-item-' + pageId;
+  item.innerHTML = `<div class="fb-page-item-num">${fbPages.length}</div><span>${pageName}</span>`;
+  item.addEventListener('click', (e) => switchPage(e, pageId));
+  // Always insert before the "Add page" button so it stays at the bottom
+  const addBtn = list.querySelector('.fb-page-dropdown-add');
+  addBtn ? list.insertBefore(item, addBtn) : list.appendChild(item);
+
+  // Switch to the new page
+  fbActivePage = pageId;
+  document.querySelectorAll('.fb-page-content').forEach(el => el.classList.remove('active'));
+  pageContent.classList.add('active');
+  document.querySelectorAll('.fb-page-item').forEach(el => el.classList.remove('active'));
+  item.classList.add('active');
+
+  updatePageCounter();
+  // Select the default card so the right panel populates
+  selectFbCard(defaultCardId);
+  // Open the dropdown to reveal the new page
+  document.getElementById('fb-page-btn').classList.add('open');
+}
+
+/* ── Editable page title ─────────────────────────────────────────────── */
+function editPageName(pageId) {
+  const wrap = document.getElementById('fb-page-name-wrap-' + pageId);
+  const span = document.getElementById('fb-page-name-' + pageId);
+  if (!wrap || !span) return;
+  if (wrap.classList.contains('editing')) return;
+
+  const currentName = span.textContent;
+  wrap.classList.add('editing');
+
+  // Swap span for an input
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'fb-page-name-input';
+  input.value = currentName;
+  wrap.replaceChild(input, span);
+  input.select();
+
+  function commit() {
+    const newName = input.value.trim() || 'Untitled page';
+    // Restore the span
+    span.textContent = newName;
+    wrap.replaceChild(span, input);
+    wrap.classList.remove('editing');
+
+    // Keep page data in sync
+    const page = fbPages.find(p => p.id === pageId);
+    if (page) page.name = newName;
+
+    // Update the accordion dropdown label
+    const pageItem = document.getElementById('fb-page-item-' + pageId);
+    if (pageItem) {
+      const labelSpan = pageItem.querySelector('span');
+      if (labelSpan) labelSpan.textContent = newName;
+    }
+  }
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = currentName; input.blur(); }
+  });
+}
+
+function addPageFromDropdown(event) {
+  event.stopPropagation();
+  addPage();
+  // Keep dropdown open so the new page is visible in the list
+  document.getElementById('fb-page-btn').classList.add('open');
+}
+
+function updatePageCounter() {
+  const idx = fbPages.findIndex(p => p.id === fbActivePage) + 1;
+  document.getElementById('fb-page-counter').textContent = `Page ${idx} of ${fbPages.length}`;
+}
+
+/* ── Add suggested question to canvas ───────────────────────────────── */
+function addSuggestedQuestion(itemId, label, type) {
+  if (itemId) {
+    const item = document.getElementById(itemId);
+    if (item) item.classList.add('added');
+  }
+
+  const canvas = getActiveQuestionsEl();
+  const newId = fbNextCardId++;
+  const typeLabel = type === 'number' ? 'Number'
+                  : type === 'choice' ? 'Multiple choice'
+                  : type === 'checkbox' ? 'Checkbox'
+                  : 'Text';
+  const typeIcon = type === 'number'
+    ? '<span style="font-size:11px;font-weight:700;color:#1a6ecc">123</span>'
+    : type === 'choice'
+    ? '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#1a7a3c" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="#1a7a3c"/></svg>'
+    : type === 'checkbox'
+    ? '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="13" height="13" rx="3" stroke="#a05c00" stroke-width="1.5"/><polyline points="4 8 7 11 12 5" stroke="#a05c00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    : '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h10" stroke="#5140d4" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+  const card = document.createElement('div');
+  card.className = 'fb-question-card';
+  card.id = 'fb-card-' + newId;
+  card.onclick = () => selectFbCard(newId);
+  card.innerHTML = `
+    <button class="fb-card-delete" onclick="deleteFbCard(event,this.parentElement)" title="Delete question"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h14"/><path d="M8 6V4h4v2"/><path d="M5 6l1 11a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-11"/><line x1="8" y1="10" x2="8" y2="15"/><line x1="12" y1="10" x2="12" y2="15"/></svg></button>
+    <div class="fb-q-label-wrap">
+      <input class="fb-q-label-input" id="fb-card-label-${newId}" value="${label}" placeholder="Question title" oninput="syncCardTitleFromCard(this,${newId})" onclick="event.stopPropagation();selectFbCard(${newId});">
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#8891a1;margin-bottom:8px;">
+      ${typeIcon}
+      <span>${typeLabel}</span>
+    </div>
+    <div style="height:32px;border:1.5px solid #e4e7ee;border-radius:6px;background:#f8f9fc;display:flex;align-items:center;padding:0 10px;">
+      <span style="font-size:12px;color:#bfc6d4">Enter answer…</span>
+    </div>`;
+  canvas.appendChild(card);
+  canvas.appendChild(makeInsertZoneEl());
+
+  fbCardData[newId] = {
+    name: label,
+    ...(type === 'choice' ? { type: 'choice', options: ['Option 1', 'Option 2'] } : {}),
+    settings: [
+      { label: 'Required', state: 'unchecked' },
+      { label: 'Flagged',  state: 'unchecked' },
+      { label: 'Score',    state: 'unchecked' },
+    ]
+  };
+
+  selectFbCard(newId);
+  document.querySelector('.fb-canvas').scrollTop = document.querySelector('.fb-canvas').scrollHeight;
+}
+
+/* ── AI suggestion bank ──────────────────────────────────────────────── */
+const aiQuestionBank = [
+  { keywords: ['road','condition','surface','weather'],
+    suggestions: [
+      { label: 'How would you rate the road surface conditions today?', type: 'choice', typeMeta: 'Multiple choice · Good / Fair / Poor' },
+      { label: 'Were any hazardous road conditions encountered?', type: 'choice', typeMeta: 'Multiple choice · Yes / No' },
+      { label: 'Estimated visibility on route (metres)', type: 'number', typeMeta: 'Number · metres' },
+    ]
+  },
+  { keywords: ['driver','wellbeing','fatigue','fit','health'],
+    suggestions: [
+      { label: 'Is the driver fit to operate the vehicle today?', type: 'choice', typeMeta: 'Multiple choice · Yes / No' },
+      { label: 'Has the driver had at least 7 hours sleep?', type: 'checkbox', typeMeta: 'Checkbox' },
+      { label: 'Rate your current alertness level', type: 'choice', typeMeta: 'Multiple choice · 1–5 scale' },
+    ]
+  },
+  { keywords: ['fuel','battery','charge','level','energy'],
+    suggestions: [
+      { label: 'Current fuel or battery level (%)', type: 'number', typeMeta: 'Number · %' },
+      { label: 'Is the fuel / charge level sufficient for the shift?', type: 'choice', typeMeta: 'Multiple choice · Yes / No' },
+      { label: 'Estimated range remaining (km)', type: 'number', typeMeta: 'Number · km' },
+    ]
+  },
+  { keywords: ['damage','scratch','dent','defect','visual','inspect'],
+    suggestions: [
+      { label: 'Are there any visible signs of damage to the vehicle?', type: 'choice', typeMeta: 'Multiple choice · Yes / No' },
+      { label: 'Describe any damage observed', type: 'text', typeMeta: 'Text · Long answer' },
+      { label: 'Is the vehicle safe to operate despite the damage?', type: 'choice', typeMeta: 'Multiple choice · Yes / No / Requires repair' },
+    ]
+  },
+  { keywords: ['load','cargo','weight','secure','strap'],
+    suggestions: [
+      { label: 'Is the load secured correctly?', type: 'checkbox', typeMeta: 'Checkbox' },
+      { label: 'Total load weight (kg)', type: 'number', typeMeta: 'Number · kg' },
+      { label: 'Any load shifting or instability noticed?', type: 'choice', typeMeta: 'Multiple choice · Yes / No' },
+    ]
+  },
+];
+
+const aiDefaultSuggestions = [
+  { label: 'Was this check completed without issues?', type: 'choice', typeMeta: 'Multiple choice · Yes / No' },
+  { label: 'Additional notes or observations', type: 'text', typeMeta: 'Text · Long answer' },
+  { label: 'Does anything require immediate attention?', type: 'choice', typeMeta: 'Multiple choice · Yes / No' },
+];
+
+let generatedIdCounter = 100;
+
+function generateAiSuggestions() {
+  const textarea = document.getElementById('fb-ask-describe');
+  const desc = textarea.value.trim();
+  if (!desc) { textarea.focus(); return; }
+
+  const sendBtn = document.getElementById('fb-compose-send');
+  sendBtn.disabled = true;
+
+  textarea.placeholder = 'Generating…';
+  textarea.value = '';
+
+  setTimeout(() => {
+    const lower = desc.toLowerCase();
+    let chosen = aiDefaultSuggestions;
+    for (const bank of aiQuestionBank) {
+      if (bank.keywords.some(k => lower.includes(k))) {
+        chosen = bank.suggestions;
+        break;
+      }
+    }
+
+    const container = document.getElementById('fb-ask-generated');
+    container.style.display = 'block';
+
+    const existingItems = container.querySelectorAll('.fb-ask-item');
+    existingItems.forEach(el => el.remove());
+
+    chosen.forEach(q => {
+      const id = 'fb-gen-' + (generatedIdCounter++);
+      const badgeClass = q.type === 'number' ? 'fb-badge-number'
+                       : q.type === 'choice'  ? 'fb-badge-choice'
+                       : q.type === 'checkbox' ? 'fb-badge-check'
+                       : 'fb-badge-text';
+      const badgeText = q.type === 'number' ? '123'
+                      : q.type === 'choice'  ? '✓✗'
+                      : q.type === 'checkbox' ? '☑'
+                      : 'T';
+
+      const item = document.createElement('div');
+      item.className = 'fb-ask-item';
+      item.id = id;
+      item.innerHTML = `
+        <div class="fb-ask-item-left">
+          <div class="fb-ask-type-badge ${badgeClass}">${badgeText}</div>
+          <div class="fb-ask-item-body">
+            <div class="fb-ask-item-label">${q.label}</div>
+            <div class="fb-ask-item-type">${q.typeMeta}</div>
+          </div>
+        </div>
+        <button class="fb-ask-add-btn" onclick="addSuggestedQuestion('${id}','${q.label.replace(/'/g,"\\'")}','${q.type}')">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+        </button>`;
+      container.appendChild(item);
+    });
+
+    container.querySelectorAll('.fb-ask-item').forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(6px)';
+      el.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+      setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, i * 80);
+    });
+
+    textarea.placeholder = 'Describe what you want to capture…';
+    sendBtn.disabled = true;
+  }, 600);
+}
+
+/* ── Auto-size card label inputs (fallback for field-sizing: content) ── */
+function resizeLabelInput(input) {
+  // field-sizing:content handles this in modern browsers; JS fallback for others
+  if (!CSS.supports('field-sizing', 'content')) {
+    input.style.width = '0';
+    input.style.width = Math.max(30, input.scrollWidth) + 'px';
+  }
+}
+// Size all static inputs on load
+document.querySelectorAll('.fb-q-label-input').forEach(resizeLabelInput);
+
+/* ── Right panel: options section ───────────────────────────────────── */
+function renderOptionsSection(id) {
+  const sec = document.getElementById('fb-options-section');
+  const data = fbCardData[id];
+  if (!data || data.type !== 'choice') {
+    sec.innerHTML = '';
+    return;
+  }
+  sec.innerHTML = `
+    <div class="fb-options-section">
+      <div class="fb-field-label">Options</div>
+      <div id="fb-option-rows">
+        ${data.options.map((opt, i) => `
+          <div class="fb-option-row">
+            <div class="fb-option-radio"></div>
+            <input class="fb-option-input" value="${opt.replace(/"/g,'&quot;')}" placeholder="Option ${i + 1}" oninput="updateCardOption(${i}, this.value)">
+            <button class="fb-option-delete" onclick="removeCardOption(${i})" title="Remove option">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
+            </button>
+          </div>`).join('')}
+      </div>
+      <button class="fb-add-option-btn" onclick="addCardOption()">
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>
+        Add option
+      </button>
+    </div>`;
+}
+
+function updateCardOption(index, value) {
+  if (fbSelectedCard == null) return;
+  const data = fbCardData[fbSelectedCard];
+  if (data && data.options) data.options[index] = value;
+}
+
+function removeCardOption(index) {
+  if (fbSelectedCard == null) return;
+  const data = fbCardData[fbSelectedCard];
+  if (!data || !data.options || data.options.length <= 1) return;
+  data.options.splice(index, 1);
+  renderOptionsSection(fbSelectedCard);
+}
+
+function addCardOption() {
+  if (fbSelectedCard == null) return;
+  const data = fbCardData[fbSelectedCard];
+  if (!data || !data.options) return;
+  data.options.push('Option ' + (data.options.length + 1));
+  renderOptionsSection(fbSelectedCard);
+  // Focus the newly added input
+  const rows = document.querySelectorAll('#fb-option-rows .fb-option-input');
+  if (rows.length) rows[rows.length - 1].focus();
+}
+
+/* ── Card title sync ─────────────────────────────────────────────────── */
+function syncCardTitleFromCard(input, id) {
+  const name = input.value;
+  resizeLabelInput(input);
+  if (fbCardData[id]) fbCardData[id].name = name;
+  if (fbSelectedCard === id) {
+    document.getElementById('fb-question-name').value = name;
+  }
+}
+
+/* ── Card selection ──────────────────────────────────────────────────── */
+function selectFbCard(id) {
+  fbSelectedCard = id;
+
+  document.querySelectorAll('.fb-question-card').forEach(card => {
+    const cardId = parseInt(card.id.replace('fb-card-', ''), 10);
+    card.classList.toggle('selected', cardId === id);
+  });
+
+  const data = fbCardData[id];
+  if (!data) return;
+
+  document.getElementById('fb-question-name').value = data.name;
+
+  renderOptionsSection(id);
+
+  const container = document.getElementById('fb-settings-rows');
+  container.innerHTML = data.settings.map(s => {
+    const checkIcon = s.state === 'checked'
+      ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>'
+      : s.state === 'partial'
+      ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="2" y1="6" x2="10" y2="6"/></svg>'
+      : '';
+    return `<div class="fb-setting-row${s.indent ? ' indented' : ''}">
+      <span class="fb-setting-name">${s.label}</span>
+      <div class="fb-checkbox${s.state === 'unchecked' ? ' unchecked' : s.state === 'partial' ? ' partial' : ''}">${checkIcon}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Card deletion ───────────────────────────────────────────────────── */
+function deleteFbCard(event, cardEl) {
+  event.stopPropagation();
+
+  const next = cardEl.nextElementSibling;
+  const prev = cardEl.previousElementSibling;
+
+  cardEl.remove();
+
+  if (next && next.classList.contains('fb-insert-zone')) {
+    next.remove();
+  } else if (prev && prev.classList.contains('fb-insert-zone')) {
+    prev.remove();
+  }
+}
+
+// Initialise with card 1 selected
+selectFbCard(1);
+
+// Wire right panel question name input → sync back to selected card
+document.getElementById('fb-question-name').addEventListener('input', function() {
+  if (fbSelectedCard == null) return;
+  const name = this.value;
+  if (fbCardData[fbSelectedCard]) fbCardData[fbSelectedCard].name = name;
+  const lbl = document.getElementById('fb-card-label-' + fbSelectedCard);
+  if (lbl) { lbl.value = name; resizeLabelInput(lbl); }
+});
+
+/* ── Insert zone + dropdown ────────────────────────────────────────── */
+let activeInsertZone = null;
+
+function makeInsertZoneEl() {
+  const z = document.createElement('div');
+  z.className = 'fb-insert-zone';
+  z.innerHTML = `<button class="fb-insert-btn" onclick="openInsertDropdown(event,this)"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg></button>`;
+  return z;
+}
+
+function openInsertDropdown(event, btn) {
+  event.stopPropagation();
+  const dd = document.getElementById('fb-insert-dd');
+  const alreadyOpen = dd.classList.contains('open') && activeInsertZone === btn.closest('.fb-insert-zone');
+
+  document.querySelectorAll('.fb-insert-btn.active').forEach(b => b.classList.remove('active'));
+  dd.classList.remove('open');
+
+  if (alreadyOpen) { activeInsertZone = null; return; }
+
+  activeInsertZone = btn.closest('.fb-insert-zone');
+  btn.classList.add('active');
+
+  const rect = btn.getBoundingClientRect();
+  const ddW = 210;
+  let left = rect.left + rect.width / 2 - ddW / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - ddW - 8));
+  dd.style.left = left + 'px';
+  dd.style.top  = (rect.bottom + 6) + 'px';
+  dd.classList.add('open');
+}
+
+function insertCardFromDropdown(type, label) {
+  const dd = document.getElementById('fb-insert-dd');
+  dd.classList.remove('open');
+  document.querySelectorAll('.fb-insert-btn.active').forEach(b => b.classList.remove('active'));
+
+  if (!activeInsertZone) return;
+
+  const newId = fbNextCardId++;
+
+  const typeLabel = type === 'number' ? 'Number'
+                  : type === 'text'   ? 'Text'
+                  : type === 'instruction' ? 'Instruction'
+                  : 'Multiple choice';
+
+  const answerHtml = type === 'choice'
+    ? `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #d0d4de;flex-shrink:0;background:#fff;"></div>
+          <span style="font-size:13px;color:#bfc6d4">Option 1</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #d0d4de;flex-shrink:0;background:#fff;"></div>
+          <span style="font-size:13px;color:#bfc6d4">Option 2</span>
+        </div>
+      </div>`
+    : type === 'instruction'
+    ? `<div style="height:32px;border:1.5px dashed #d8dce8;border-radius:6px;display:flex;align-items:center;padding:0 10px;"><span style="font-size:12px;color:#bfc6d4">Add instruction text…</span></div>`
+    : type === 'text'
+    ? `<div style="height:48px;border:1.5px solid #e4e7ee;border-radius:6px;background:#f8f9fc;display:flex;align-items:flex-start;padding:8px 10px;"><span style="font-size:12px;color:#bfc6d4">Enter answer…</span></div>`
+    : type === 'number'
+    ? `<div style="height:36px;border:1.5px solid #e4e7ee;border-radius:6px;background:#f8f9fc;display:flex;align-items:center;padding:0 12px;"><span style="font-size:12px;color:#bfc6d4">0</span></div>`
+    : `<div style="height:36px;border:1.5px solid #e4e7ee;border-radius:6px;background:#f8f9fc;display:flex;align-items:center;padding:0 10px;"><span style="font-size:12px;color:#bfc6d4">Enter answer…</span></div>`;
+
+  const footerHtml = type !== 'instruction' ? `
+    <div class="fb-q-actions">
+      <button class="fb-q-action-btn"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v14l4-2 4 2 4-2V4a2 2 0 0 0-2-2z"/></svg> Note</button>
+      <button class="fb-q-action-btn"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="7.5" cy="7.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Media</button>
+      <button class="fb-q-action-btn"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Action</button>
+    </div>` : '';
+
+  const card = document.createElement('div');
+  card.className = 'fb-question-card';
+  card.id = 'fb-card-' + newId;
+  card.onclick = () => selectFbCard(newId);
+  card.innerHTML = `
+    <button class="fb-card-delete" onclick="deleteFbCard(event,this.parentElement)" title="Delete question"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h14"/><path d="M8 6V4h4v2"/><path d="M5 6l1 11a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-11"/><line x1="8" y1="10" x2="8" y2="15"/><line x1="12" y1="10" x2="12" y2="15"/></svg></button>
+    <div class="fb-q-label-wrap">
+      <input class="fb-q-label-input" id="fb-card-label-${newId}" value="Untitled ${typeLabel}" placeholder="Question title" oninput="syncCardTitleFromCard(this,${newId})" onclick="event.stopPropagation();selectFbCard(${newId});">
+    </div>
+    ${answerHtml}
+    ${footerHtml}`;
+
+  fbCardData[newId] = {
+    name: 'Untitled ' + typeLabel,
+    ...(type === 'choice' ? { type: 'choice', options: ['Option 1', 'Option 2'] } : {}),
+    settings: [
+      { label: 'Required', state: 'unchecked' },
+      { label: 'Flagged',  state: 'unchecked' },
+      { label: 'Score',    state: 'unchecked' },
+    ]
+  };
+
+  activeInsertZone.after(card);
+  card.after(makeInsertZoneEl());
+
+  selectFbCard(newId);
+  activeInsertZone = null;
+}
+
+/* ── Add component from Add panel ────────────────────────────────────── */
+function addComponentToCanvas(type, label) {
+  const canvas = getActiveQuestionsEl();
+  const newId = fbNextCardId++;
+
+  const typeLabels = {
+    choice:       'Multiple choice',
+    text:         'Text',
+    number:       'Number',
+    checkbox:     'Checkbox',
+    date:         'Date & Time',
+    media:        'Media',
+    location:     'Inspection location',
+    questionbank: 'Question bank',
+    site:         'Site',
+    person:       'Person',
+    asset:        'Asset',
+  };
+  const typeLabel = typeLabels[type] || label;
+
+  // Answer preview HTML per type
+  const answerHtml = type === 'text'
+    ? `<div style="height:48px;border:1.5px solid #e4e7ee;border-radius:6px;background:#f8f9fc;display:flex;align-items:flex-start;padding:8px 10px;"><span style="font-size:12px;color:#bfc6d4">Enter answer…</span></div>`
+    : type === 'date'
+    ? `<div style="display:flex;align-items:center;justify-content:space-between;border:1.5px solid #e4e7ee;border-radius:8px;padding:9px 12px;font-size:13.5px;color:#bfc6d4;background:#f8f9fc;cursor:pointer;">Select date &amp; time<svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l3 3 3-3"/></svg></div>`
+    : type === 'media'
+    ? `<div style="height:48px;border:1.5px dashed #d8dce8;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:6px;background:#f8f9fc;"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#bfc6d4" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="7.5" cy="7.5" r="1.5"/><polyline points="3 17 8 12 11 15 14 12 17 17"/></svg><span style="font-size:12px;color:#bfc6d4">Add photo or file…</span></div>`
+    : type === 'checkbox'
+    ? `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;"><div style="width:18px;height:18px;border-radius:4px;border:1.5px solid #d8dce8;background:#fff;flex-shrink:0;"></div><span style="font-size:13px;color:#bfc6d4">Checkbox option</span></div>`
+    : type === 'location' || type === 'site' || type === 'person' || type === 'asset' || type === 'questionbank'
+    ? `<button style="width:100%;background:#675df4;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;">Select ${typeLabel.toLowerCase()}</button>`
+    : type === 'choice'
+    ? `<div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #d8dce8;flex-shrink:0;"></div><span style="font-size:13px;color:#bfc6d4">Option 1</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #d8dce8;flex-shrink:0;"></div><span style="font-size:13px;color:#bfc6d4">Option 2</span></div>
+      </div>`
+    : `<div style="height:32px;border:1.5px solid #e4e7ee;border-radius:6px;background:#f8f9fc;display:flex;align-items:center;padding:0 10px;"><span style="font-size:12px;color:#bfc6d4">Enter answer…</span></div>`;
+
+  const card = document.createElement('div');
+  card.className = 'fb-question-card';
+  card.id = 'fb-card-' + newId;
+  card.onclick = () => selectFbCard(newId);
+  card.innerHTML = `
+    <button class="fb-card-delete" onclick="deleteFbCard(event,this.parentElement)" title="Delete question"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h14"/><path d="M8 6V4h4v2"/><path d="M5 6l1 11a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-11"/><line x1="8" y1="10" x2="8" y2="15"/><line x1="12" y1="10" x2="12" y2="15"/></svg></button>
+    <div class="fb-q-label-wrap">
+      <input class="fb-q-label-input" id="fb-card-label-${newId}" value="Untitled ${typeLabel}" placeholder="Question title" oninput="syncCardTitleFromCard(this,${newId})" onclick="event.stopPropagation();selectFbCard(${newId});">
+    </div>
+    ${answerHtml}
+    <div class="fb-q-actions">
+      <button class="fb-q-action-btn"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v14l4-2 4 2 4-2V4a2 2 0 0 0-2-2z"/></svg> Note</button>
+      <button class="fb-q-action-btn"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="7.5" cy="7.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Media</button>
+      <button class="fb-q-action-btn"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Action</button>
+    </div>`;
+
+  fbCardData[newId] = {
+    name: 'Untitled ' + typeLabel,
+    ...(type === 'choice' ? { type: 'choice', options: ['Option 1', 'Option 2'] } : {}),
+    settings: [
+      { label: 'Required', state: 'unchecked' },
+      { label: 'Flagged',  state: 'unchecked' },
+      { label: 'Score',    state: 'unchecked' },
+    ]
+  };
+
+  canvas.appendChild(card);
+  canvas.appendChild(makeInsertZoneEl());
+
+  selectFbCard(newId);
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Close insert dropdown and page accordion on outside click
+document.addEventListener('click', function() {
+  const dd = document.getElementById('fb-insert-dd');
+  if (dd) {
+    dd.classList.remove('open');
+    document.querySelectorAll('.fb-insert-btn.active').forEach(b => b.classList.remove('active'));
+    activeInsertZone = null;
+  }
+  const pageBtn = document.getElementById('fb-page-btn');
+  if (pageBtn) pageBtn.classList.remove('open');
+});
+</script>
+
+</body>
+</html>

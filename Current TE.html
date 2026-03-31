@@ -1,0 +1,2771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Current TE — SafetyCulture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ── Design tokens (from Figma) ────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-default:          #e9edf6;
+  --bg-weak:             #f8f9fc;
+  --bg-strong:           #dbe0eb;
+
+  /* Surface */
+  --surface:             #ffffff;
+  --surface-border:      #bfc6d4;
+  --surface-border-weak: #dbe0eb;
+
+  /* Text */
+  --text-default:        #1f2533;
+  --text-weak:           #3f495a;
+  --text-weaker:         #545f70;
+  --text-placeholder:    #bfc6d4;
+
+  /* Accent */
+  --accent:              #675df4;
+  --accent-hover:        #5a51e0;
+  --accent-weakest:      #ecedfe;
+  --accent-border:       #564be7;
+  --accent-text:         #4740d4;
+
+  /* Negative */
+  --negative:            #a8242a;
+
+  /* Spacing */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+  --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+
+  /* Radii */
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 24px;
+}
+
+/* ── Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text-default);
+  background: var(--surface);
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+svg { display: block; flex-shrink: 0; }
+
+/* ── App shell ─────────────────────────────────────────────────── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOP BAR  (3 rows)
+═══════════════════════════════════════════════════════════════ */
+.topbar { background: var(--surface); flex-shrink: 0; }
+
+/* Row 1: Nav ─────────────────────────────── */
+.topbar-nav {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 0 var(--sp-2);
+  height: 44px;
+}
+
+.topbar-nav-left {
+  display: flex;
+  align-items: center;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  color: var(--text-default);
+  transition: background 0.12s;
+}
+.btn-back:hover { background: var(--bg-default); }
+
+.topbar-tabs {
+  display: flex;
+  align-items: stretch;
+  padding-top: var(--sp-3);
+}
+
+.topbar-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+}
+
+.topbar-tab-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px var(--sp-3) 0;
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-weaker);
+  white-space: nowrap;
+  border-radius: var(--r-md);
+  transition: background 0.12s;
+}
+.topbar-tab:hover .topbar-tab-inner { background: var(--bg-default); }
+.topbar-tab.active .topbar-tab-inner { color: var(--accent-text); }
+
+.topbar-tab-border {
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: transparent;
+  padding: 0 var(--sp-3);
+}
+.topbar-tab-border-inner {
+  height: 100%;
+  background: transparent;
+  border-radius: 2px;
+}
+.topbar-tab.active .topbar-tab-border-inner { background: var(--accent-text); }
+
+.topbar-nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.btn-icon-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  color: var(--text-weaker);
+  transition: background 0.12s;
+}
+.btn-icon-nav:hover { background: var(--bg-default); }
+
+/* Row 2: Tools ────────────────────────────── */
+.topbar-tools {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-2) var(--sp-4);
+  gap: var(--sp-4);
+  height: 56px;
+}
+
+.topbar-tools-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.btn-bulk-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent-text);
+  background: var(--surface);
+  transition: background 0.12s;
+}
+.btn-bulk-edit:hover { background: var(--bg-weak); }
+
+.btn-icon-tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  color: var(--text-weaker);
+  transition: background 0.12s;
+}
+.btn-icon-tool:hover { background: var(--bg-default); }
+.btn-icon-tool:disabled { opacity: 0.3; cursor: default; }
+.btn-icon-tool:disabled:hover { background: none; }
+
+.topbar-tools-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+}
+
+.badge-saved {
+  background: var(--bg-default);
+  padding: 2px var(--sp-2);
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-weak);
+  white-space: nowrap;
+}
+
+.text-published {
+  font-size: 14px;
+  color: var(--text-weak);
+  white-space: nowrap;
+}
+
+.topbar-tools-publish {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.btn-publish {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--accent);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  transition: background 0.15s;
+}
+.btn-publish:hover { background: var(--accent-hover); }
+
+.btn-publish-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-weaker);
+  transition: background 0.12s;
+}
+.btn-publish-more:hover { background: var(--bg-weak); }
+
+/* Row 3: Preview hint ─────────────────────── */
+.topbar-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--surface-border-weak);
+  height: 56px;
+}
+
+.btn-show-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: 40px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent-text);
+  transition: background 0.12s;
+}
+.btn-show-preview:hover { background: var(--bg-weak); }
+.btn-show-preview.hidden { display: none; }
+
+.btn-hide-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: 40px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent-text);
+  transition: background 0.12s;
+}
+.btn-hide-preview:hover { background: var(--bg-weak); }
+.btn-hide-preview.hidden { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BODY
+═══════════════════════════════════════════════════════════════ */
+.body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Floating add toolbar ─────────────────────────────────────── */
+.floating-toolbar { display: none; }
+
+/* ── Canvas ───────────────────────────────────────────────────── */
+.canvas {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-default);
+  padding: 24px 80px 24px 64px;
+  min-width: 0;
+}
+
+.canvas-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─ Template header ──────────────────────────────────────────── */
+.template-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-6);
+  padding: 24px 0 8px;
+}
+
+.template-cover {
+  width: 126px;
+  height: 126px;
+  border-radius: var(--r-md);
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 2px dashed var(--surface-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.template-cover:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-weakest);
+}
+
+.template-cover-label {
+  font-size: 24px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: -1px;
+}
+
+.template-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding-top: 4px;
+}
+
+.template-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.template-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-default);
+  letter-spacing: -0.75px;
+  line-height: 36px;
+}
+
+.btn-edit-template-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-xs);
+  color: var(--text-weaker);
+  transition: background 0.12s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+.template-name-row:hover .btn-edit-template-name { opacity: 1; }
+.btn-edit-template-name:hover { background: var(--bg-strong); }
+
+.template-name-input {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-default);
+  letter-spacing: -0.75px;
+  line-height: 36px;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  outline: none;
+  background: transparent;
+  padding: 0;
+  min-width: 40px;
+  width: auto;
+}
+
+.template-desc {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-weak);
+  line-height: 24px;
+}
+
+/* ─ Section block ────────────────────────────────────────────── */
+.section {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+/* Section header row */
+.section-hdr {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-2);
+  gap: 0;
+  min-height: 44px;
+}
+
+.section-hdr-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.btn-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-xs);
+  color: var(--text-weaker);
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+.btn-chevron:hover { background: var(--bg-default); }
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-default);
+  letter-spacing: -0.25px;
+  line-height: 28px;
+  white-space: nowrap;
+}
+
+.btn-edit-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-xs);
+  color: var(--text-weaker);
+  transition: background 0.12s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+.section-hdr:hover .btn-edit-section { opacity: 1; }
+.btn-edit-section:hover { background: var(--bg-default); }
+
+/* Inline rename input */
+.section-title-input {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-default);
+  letter-spacing: -0.25px;
+  line-height: 28px;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  outline: none;
+  background: transparent;
+  padding: 0;
+  min-width: 40px;
+  width: auto;
+}
+
+.btn-kebab-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-xs);
+  color: var(--text-weaker);
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+.btn-kebab-section:hover { background: var(--bg-default); }
+
+/* Section description */
+.section-desc {
+  padding: 0 var(--sp-4) var(--sp-3) 32px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--text-default);
+}
+.section-desc a {
+  color: var(--accent-text);
+  text-decoration: none;
+}
+.section-desc a:hover { text-decoration: underline; }
+
+/* ─ Table ────────────────────────────────────────────────────── */
+.q-table { width: 100%; }
+
+/* Table header row */
+.q-thead {
+  display: flex;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.q-th-question {
+  flex: 1;
+  background: var(--bg-strong);
+  padding: var(--sp-2);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-weak);
+  line-height: 16px;
+}
+
+.q-th-response {
+  width: 277px;
+  background: var(--bg-strong);
+  padding: var(--sp-2);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-weak);
+  line-height: 16px;
+  flex-shrink: 0;
+}
+
+/* Question row */
+.q-row {
+  display: flex;
+  gap: 2px;
+  position: relative;
+  background: var(--bg-default);
+  border-bottom: 1px solid var(--surface-border-weak);
+}
+.q-row:last-child {
+  border-bottom: none;
+}
+
+.q-row-inner {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+
+/* Drag handle cell */
+.q-cell-handle {
+  width: 40px;
+  min-width: 40px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  padding: var(--sp-2) var(--sp-1);
+}
+
+.drag-dots {
+  opacity: 0;
+  transition: opacity 0.12s;
+  color: var(--text-placeholder);
+}
+.q-row:hover .drag-dots { opacity: 1; }
+
+/* Question label cell */
+.q-cell-question {
+  flex: 1;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.q-label-wrap {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+}
+
+.q-input {
+  width: 100%;
+  padding: var(--sp-3);
+  border: 2px solid transparent;
+  border-radius: var(--r-xs);
+  background: var(--surface);
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--text-default);
+  line-height: 24px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.q-input::placeholder { color: var(--text-placeholder); }
+.q-input:focus, .q-input.active {
+  border-color: var(--accent-border);
+  background: var(--accent-weakest);
+}
+
+/* Sub-actions (shown when row is active) */
+.q-subactions {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--bg-weak);
+  border-radius: 2px;
+  min-height: 40px;
+}
+.q-row.active .q-subactions { display: flex; }
+
+.q-subactions-checks {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.q-check-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-weak);
+  cursor: pointer;
+}
+
+.q-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-xs);
+  border: 2px solid var(--surface-border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.q-checkbox.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Response type cell */
+.q-cell-response {
+  width: 277px;
+  min-width: 277px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  padding: var(--sp-2) var(--sp-4);
+  gap: var(--sp-2);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.1s;
+}
+.q-row.active .q-cell-response { align-self: flex-start; min-height: 48px; }
+.q-cell-response:hover { background: #f8f9fc; }
+
+.q-type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.q-type-label {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-default);
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.q-type-chevron {
+  color: var(--text-weaker);
+  flex-shrink: 0;
+}
+
+/* YNA chips */
+.yna-chips {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+}
+.chip { padding: 2px 7px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.chip-yes  { background: #d1fae5; color: #065f46; }
+.chip-no   { background: #fee2e2; color: #991b1b; }
+.chip-na   { background: #f3f4f6; color: #6b7280; }
+
+/* Delete button (floats to right of row) */
+/* delete button is positioned via JS as position:fixed */
+.q-delete {
+  display: none;
+  position: fixed;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  color: var(--text-weaker);
+  cursor: pointer;
+  z-index: 200;
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+}
+.q-delete.visible { display: flex; }
+.q-delete:hover { color: var(--negative); background: #fff0f0; border-color: #fca5a5; }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSE TYPE DROPDOWN
+═══════════════════════════════════════════════════════════════ */
+.rt-dropdown {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  background: var(--surface);
+  border: 1px solid var(--surface-border-weak);
+  border-radius: var(--r-md);
+  box-shadow: 0 8px 32px rgba(30,35,50,0.16), 0 2px 8px rgba(30,35,50,0.08);
+  width: 620px;
+  max-width: calc(100vw - 16px);
+  /* height is set dynamically by JS to keep it on screen */
+  overflow: hidden;
+}
+.rt-dropdown.open { display: flex; }
+
+.rt-dd-left {
+  width: 300px;
+  min-width: 300px;
+  border-right: 1px solid var(--surface-border-weak);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rt-dd-search-wrap {
+  padding: var(--sp-3);
+  border-bottom: 1px solid var(--surface-border-weak);
+}
+
+.rt-dd-search {
+  width: 100%;
+  height: 40px;
+  border: 1.5px solid var(--surface-border);
+  border-radius: var(--r-sm);
+  padding: 0 var(--sp-3) 0 36px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-default);
+  background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23bfc6d4' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='M10.5 10.5L14 14'/%3E%3C/svg%3E") no-repeat 10px center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.rt-dd-search:focus { border-color: var(--accent-border); }
+.rt-dd-search::placeholder { color: var(--text-placeholder); }
+
+.rt-dd-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: var(--sp-3);
+}
+
+.rt-dd-section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-weak);
+}
+.rt-dd-section-label a {
+  font-size: 13px;
+  color: var(--accent-text);
+  text-decoration: none;
+  font-weight: 500;
+}
+.rt-dd-section-label a:hover { text-decoration: underline; }
+
+/* Multiple choice row */
+.rt-mc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  margin: 0 var(--sp-1);
+  transition: background 0.1s;
+}
+.rt-mc-row:hover, .rt-mc-row.selected { background: var(--accent-weakest); }
+
+.rt-mc-chips {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.rt-mc-chip {
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1.5px solid transparent;
+}
+.rt-chip-yes        { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+.rt-chip-no         { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.rt-chip-na         { background: #f3f4f6; color: #6b7280; border-color: #d1d5db; }
+.rt-chip-good       { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+.rt-chip-fair       { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+.rt-chip-poor       { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.rt-chip-safe       { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+.rt-chip-atrisk     { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.rt-chip-pass       { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+.rt-chip-fail       { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.rt-chip-compliant  { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+.rt-chip-noncompliant { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.rt-chip-more       { background: #f3f4f6; color: #6b7280; border-color: #d1d5db; }
+
+.rt-mc-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-xs);
+  color: var(--text-placeholder);
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+.rt-mc-row:hover .rt-mc-edit { color: var(--accent-text); }
+
+/* GRS row */
+.rt-grs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  margin: 0 var(--sp-1);
+  transition: background 0.1s;
+}
+.rt-grs-row:hover { background: var(--accent-weakest); }
+
+.rt-grs-label {
+  font-size: 14px;
+  color: var(--text-default);
+}
+
+/* Right column */
+.rt-dd-right {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: var(--sp-3);
+}
+
+.rt-other-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  cursor: pointer;
+  transition: background 0.1s;
+  border-radius: var(--r-sm);
+  margin: 0 var(--sp-1);
+}
+.rt-other-row:hover { background: var(--bg-weak); }
+
+.rt-other-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rt-other-label {
+  font-size: 14px;
+  color: var(--text-default);
+  line-height: 20px;
+}
+
+.rt-divider {
+  height: 1px;
+  background: var(--surface-border-weak);
+  margin: var(--sp-2) var(--sp-4);
+}
+
+/* ─ Add new button ───────────────────────────────────────────── */
+.add-new-wrap {
+  padding: 0 0 var(--sp-3) 0;
+  margin-top: -4px;
+  background: transparent;
+  position: relative;
+}
+
+/* ── Row floating action panel ───────────────────────────────── */
+.row-float-panel {
+  position: fixed;
+  z-index: 500;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--surface-border-weak);
+  border-radius: var(--r-md);
+  box-shadow: 0 4px 16px rgba(30,35,50,0.12), 0 1px 4px rgba(30,35,50,0.08);
+  padding: var(--sp-2) var(--sp-1);
+  gap: var(--sp-1);
+  width: 68px;
+}
+.row-float-panel.visible { display: flex; }
+
+/* Arrow caret pointing right */
+.row-float-panel::after {
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 7px solid var(--surface);
+  filter: drop-shadow(1px 0 0 var(--surface-border-weak));
+}
+
+.row-float-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 56px;
+  padding: var(--sp-2) var(--sp-1);
+  border: none;
+  background: transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.row-float-btn:hover { background: var(--bg-default); }
+
+.row-float-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.row-float-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-weak);
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+/* ── Add-new dropdown menu ────────────────────────────────────── */
+.add-new-menu {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  background: var(--surface);
+  border: 1px solid var(--surface-border-weak);
+  border-radius: var(--r-md);
+  box-shadow: 0 8px 32px rgba(30,35,50,0.16), 0 2px 8px rgba(30,35,50,0.08);
+  width: 280px;
+  padding: var(--sp-2) 0;
+  overflow: hidden;
+}
+.add-new-menu.open { display: block; }
+
+.add-menu-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  transition: background 0.1s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+.add-menu-item:hover { background: var(--bg-weak); }
+
+.add-menu-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--text-weak);
+}
+
+.add-menu-text { flex: 1; }
+
+.add-menu-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-default);
+  line-height: 20px;
+  margin-bottom: 2px;
+}
+
+.add-menu-desc {
+  font-size: 13px;
+  color: var(--text-weaker);
+  line-height: 18px;
+}
+
+.btn-add-new {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 44px;
+  padding: 0 var(--sp-5);
+  border: 1.5px solid var(--surface-border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent-text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-add-new:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-weakest);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RIGHT PANEL  (mobile preview)
+═══════════════════════════════════════════════════════════════ */
+.right-panel {
+  width: 392px;
+  min-width: 392px;
+  background: var(--bg-default);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.2s ease, min-width 0.2s ease, opacity 0.2s ease;
+}
+.right-panel.collapsed {
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.right-panel-inner {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-4);
+}
+
+/* Phone frame */
+.phone-ui {
+  width: 344px;
+  height: 616px;
+  min-height: 616px;
+  border-radius: var(--r-lg);
+  border: 12px solid var(--surface);
+  background: var(--bg-default);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 24px rgba(30,35,50,0.12);
+}
+
+/* Phone notch */
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 112px;
+  height: 16px;
+  background: var(--surface);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  z-index: 2;
+}
+
+.phone-content {
+  height: 100%;
+  overflow-y: auto;
+  border-radius: 14px;
+  background: var(--bg-weak);
+}
+
+/* Page nav */
+.preview-page-nav {
+  background: var(--bg-weak);
+  padding: var(--sp-4);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.preview-page-left { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+.preview-page-num {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: 12px;
+  color: var(--text-weak);
+}
+
+.preview-page-title {
+  font-size: 16px;
+  color: var(--text-default);
+  line-height: 24px;
+}
+
+.preview-score-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-2);
+}
+.preview-score-label { font-size: 12px; color: var(--text-weak); }
+.preview-score-val { font-size: 16px; color: var(--text-default); }
+
+/* Preview questions */
+.preview-content {
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.preview-card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  position: relative;
+}
+
+.preview-card.required::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--negative);
+}
+
+.preview-question {
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.preview-q-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--text-default);
+}
+
+.preview-q-required { color: var(--negative); font-weight: 600; }
+
+.preview-input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  padding: 0 var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-placeholder);
+}
+
+.preview-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: 32px;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent-text);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.preview-action-btn:hover { background: var(--accent-weakest); }
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══ TOP BAR ══════════════════════════════════════════════ -->
+  <div class="topbar">
+
+    <!-- Row 1: Nav -->
+    <div class="topbar-nav">
+      <div class="topbar-nav-left">
+        <button class="btn-back">
+          <!-- arrow-left -->
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 12.5L5.5 8 10 3.5"/>
+          </svg>
+          Back
+        </button>
+      </div>
+
+      <div class="topbar-tabs">
+        <div class="topbar-tab active">
+          <div class="topbar-tab-inner">1. Build</div>
+          <div class="topbar-tab-border"><div class="topbar-tab-border-inner"></div></div>
+        </div>
+        <div class="topbar-tab">
+          <div class="topbar-tab-inner">2. Report</div>
+          <div class="topbar-tab-border"><div class="topbar-tab-border-inner"></div></div>
+        </div>
+        <div class="topbar-tab">
+          <div class="topbar-tab-inner">3. Access</div>
+          <div class="topbar-tab-border"><div class="topbar-tab-border-inner"></div></div>
+        </div>
+      </div>
+
+      <div class="topbar-nav-right">
+        <!-- circle-question-mark -->
+        <button class="btn-icon-nav" title="Help">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="9" r="7.5"/>
+            <path d="M6.8 6.8a2.2 2.2 0 0 1 4.2.9c0 1.5-2.2 2-2.2 3M9 13.5h.01"/>
+          </svg>
+        </button>
+        <!-- cog -->
+        <button class="btn-icon-nav" title="Settings">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="9" r="2.5"/>
+            <path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.7 3.7l1.4 1.4M12.9 12.9l1.4 1.4M3.7 14.3l1.4-1.4M12.9 5.1l1.4-1.4"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 2: Tools -->
+    <div class="topbar-tools">
+      <div class="topbar-tools-left">
+        <button class="btn-bulk-edit">Bulk edit</button>
+        <button class="btn-icon-tool" title="Undo" disabled>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.5 7H10a4 4 0 0 1 0 8H7"/>
+            <path d="M3.5 7L6.5 4M3.5 7l3 3"/>
+          </svg>
+        </button>
+        <button class="btn-icon-tool" title="Redo" disabled>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 7H8a4 4 0 0 0 0 8h3"/>
+            <path d="M14.5 7l-3-3M14.5 7l-3 3"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="topbar-tools-info">
+        <span class="badge-saved">Unpublished changes saved</span>
+        <span class="text-published">Last published: 16 Mar 2022 17:24 PM</span>
+      </div>
+
+      <div class="topbar-tools-publish">
+        <button class="btn-publish">Publish</button>
+        <button class="btn-publish-more" title="More publish options">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+            <circle cx="9" cy="4" r="1.4"/>
+            <circle cx="9" cy="9" r="1.4"/>
+            <circle cx="9" cy="14" r="1.4"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 3: Preview bar -->
+    <div class="topbar-preview-bar">
+      <button class="btn-show-preview hidden" id="btn-show-preview" onclick="showPreview()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="1.5" width="12" height="15" rx="2"/>
+          <path d="M7 2v1.5h4V2"/>
+        </svg>
+        Show mobile preview
+      </button>
+      <button class="btn-hide-preview" id="btn-hide-preview" onclick="hidePreview()">
+        Hide mobile preview
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6.5 4.5L11 9l-4.5 4.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ BODY ════════════════════════════════════════════════ -->
+  <div class="body">
+
+    <!-- ── Canvas ────────────────────────────────────────────── -->
+    <div class="canvas">
+      <div class="canvas-inner">
+
+        <!-- Template header -->
+        <div class="template-header">
+          <div class="template-cover">
+            <!-- Image icon -->
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <!-- Image placeholder background -->
+              <rect x="6" y="10" width="36" height="28" rx="3" fill="#dbeafe"/>
+              <!-- Sun circle -->
+              <circle cx="16" cy="19" r="4" fill="#93c5fd"/>
+              <!-- Mountains -->
+              <path d="M6 34l10-12 8 10 6-7 12 9H6z" fill="#3b82f6"/>
+            </svg>
+            <!-- Green + badge -->
+            <div style="position:absolute;bottom:10px;right:10px;width:22px;height:22px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;border:2px solid white;">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+                <path d="M5 2v6M2 5h6"/>
+              </svg>
+            </div>
+          </div>
+          <div class="template-meta">
+            <div class="template-name-row">
+              <span class="template-name">Untitled template</span>
+              <button class="btn-edit-template-name" title="Rename">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="template-desc">Add a description</div>
+          </div>
+        </div>
+
+        <!-- ══ TITLE PAGE SECTION ══════════════════════════════ -->
+        <div class="section">
+          <!-- Section header -->
+          <div class="section-hdr">
+            <div class="section-hdr-left">
+              <button class="btn-chevron">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 6l4 4 4-4"/>
+                </svg>
+              </button>
+              <span class="section-title">Title page</span>
+              <button class="btn-edit-section" title="Rename">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/>
+                </svg>
+              </button>
+            </div>
+            <button class="btn-kebab-section" title="More">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="8" cy="3.5" r="1.3"/>
+                <circle cx="8" cy="8" r="1.3"/>
+                <circle cx="8" cy="12.5" r="1.3"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Description -->
+          <div class="section-desc">
+            The title page is the first page of your inspection report. You can <a href="#">customize the Title Page</a> below.
+          </div>
+
+          <!-- Table -->
+          <div class="q-table">
+            <!-- Header -->
+            <div class="q-thead">
+              <div style="width:40px;min-width:40px;background:var(--bg-strong);"></div>
+              <div class="q-th-question">Question</div>
+              <div class="q-th-response">Response type</div>
+            </div>
+
+            <!-- Row: * Site conducted -->
+            <div class="q-row active" onclick="selectRow(this)">
+              <div class="q-cell-handle">
+                <svg class="drag-dots" width="12" height="18" viewBox="0 0 12 18" fill="currentColor">
+                  <circle cx="3" cy="4.5" r="1.5"/><circle cx="9" cy="4.5" r="1.5"/>
+                  <circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/>
+                  <circle cx="3" cy="13.5" r="1.5"/><circle cx="9" cy="13.5" r="1.5"/>
+                </svg>
+              </div>
+              <div class="q-cell-question">
+                <div class="q-label-wrap">
+                  <input class="q-input active" type="text" value="* Site conducted" />
+                </div>
+              </div>
+              <div class="q-cell-response">
+                <span class="q-type-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#3f495a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 2a5 5 0 0 0-5 5c0 4.5 5 11 5 11s5-6.5 5-11a5 5 0 0 0-5-5z"/>
+                    <circle cx="10" cy="7" r="2"/>
+                  </svg>
+                </span>
+                <span class="q-type-label">Site</span>
+                <svg class="q-type-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 6l4 4 4-4"/>
+                </svg>
+              </div>
+              <button class="q-delete" title="Delete row">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- lid handle -->
+                  <path d="M8 3h4"/>
+                  <!-- lid -->
+                  <path d="M3 6h14"/>
+                  <!-- body -->
+                  <path d="M5 6l1 11h8l1-11"/>
+                  <!-- inner lines -->
+                  <path d="M8.5 9v5M11.5 9v5"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Row: Conducted on -->
+            <div class="q-row" onclick="selectRow(this)">
+              <div class="q-cell-handle">
+                <svg class="drag-dots" width="12" height="18" viewBox="0 0 12 18" fill="currentColor">
+                  <circle cx="3" cy="4.5" r="1.5"/><circle cx="9" cy="4.5" r="1.5"/>
+                  <circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/>
+                  <circle cx="3" cy="13.5" r="1.5"/><circle cx="9" cy="13.5" r="1.5"/>
+                </svg>
+              </div>
+              <div class="q-cell-question">
+                <div class="q-label-wrap">
+                  <input class="q-input" type="text" value="Conducted on" />
+                </div>
+                <!-- Sub-actions -->
+                <div class="q-subactions">
+                  <div class="q-subactions-checks">
+                    <label class="q-check-item">
+                      <div class="q-checkbox"></div>
+                      Required
+                    </label>
+                    <label class="q-check-item">
+                      <div class="q-checkbox checked">
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M1 4l3 3 5-6"/>
+                        </svg>
+                      </div>
+                      Date
+                    </label>
+                    <label class="q-check-item">
+                      <div class="q-checkbox checked">
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M1 4l3 3 5-6"/>
+                        </svg>
+                      </div>
+                      Time
+                    </label>
+                  </div>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color:var(--text-weaker);">
+                    <circle cx="10" cy="4.5" r="1.6"/>
+                    <circle cx="10" cy="10" r="1.6"/>
+                    <circle cx="10" cy="15.5" r="1.6"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="q-cell-response">
+                <span class="q-type-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#3f495a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2.5" y="3.5" width="15" height="13" rx="1.5"/>
+                    <path d="M6.5 2v3M13.5 2v3M2.5 8h15"/>
+                  </svg>
+                </span>
+                <span class="q-type-label">Inspection date</span>
+                <svg class="q-type-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 6l4 4 4-4"/>
+                </svg>
+              </div>
+              <button class="q-delete" title="Delete row">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- lid handle -->
+                  <path d="M8 3h4"/>
+                  <!-- lid -->
+                  <path d="M3 6h14"/>
+                  <!-- body -->
+                  <path d="M5 6l1 11h8l1-11"/>
+                  <!-- inner lines -->
+                  <path d="M8.5 9v5M11.5 9v5"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Row: Prepared by -->
+            <div class="q-row" onclick="selectRow(this)">
+              <div class="q-cell-handle">
+                <svg class="drag-dots" width="12" height="18" viewBox="0 0 12 18" fill="currentColor">
+                  <circle cx="3" cy="4.5" r="1.5"/><circle cx="9" cy="4.5" r="1.5"/>
+                  <circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/>
+                  <circle cx="3" cy="13.5" r="1.5"/><circle cx="9" cy="13.5" r="1.5"/>
+                </svg>
+              </div>
+              <div class="q-cell-question">
+                <div class="q-label-wrap">
+                  <input class="q-input" type="text" value="Prepared by" />
+                </div>
+              </div>
+              <div class="q-cell-response">
+                <span class="q-type-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#3f495a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10" cy="7" r="3.5"/>
+                    <path d="M2 18c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/>
+                  </svg>
+                </span>
+                <span class="q-type-label">Person</span>
+                <svg class="q-type-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 6l4 4 4-4"/>
+                </svg>
+              </div>
+              <button class="q-delete" title="Delete row">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- lid handle -->
+                  <path d="M8 3h4"/>
+                  <!-- lid -->
+                  <path d="M3 6h14"/>
+                  <!-- body -->
+                  <path d="M5 6l1 11h8l1-11"/>
+                  <!-- inner lines -->
+                  <path d="M8.5 9v5M11.5 9v5"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Row: Location -->
+            <div class="q-row" onclick="selectRow(this)">
+              <div class="q-cell-handle">
+                <svg class="drag-dots" width="12" height="18" viewBox="0 0 12 18" fill="currentColor">
+                  <circle cx="3" cy="4.5" r="1.5"/><circle cx="9" cy="4.5" r="1.5"/>
+                  <circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/>
+                  <circle cx="3" cy="13.5" r="1.5"/><circle cx="9" cy="13.5" r="1.5"/>
+                </svg>
+              </div>
+              <div class="q-cell-question">
+                <div class="q-label-wrap">
+                  <input class="q-input" type="text" value="Location" />
+                </div>
+              </div>
+              <div class="q-cell-response">
+                <span class="q-type-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#3f495a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 2a6 6 0 0 0-6 6c0 5 6 12 6 12s6-7 6-12a6 6 0 0 0-6-6z"/>
+                    <circle cx="10" cy="8" r="2.2"/>
+                  </svg>
+                </span>
+                <span class="q-type-label">Inspection location</span>
+                <svg class="q-type-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 6l4 4 4-4"/>
+                </svg>
+              </div>
+              <button class="q-delete" title="Delete row">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- lid handle -->
+                  <path d="M8 3h4"/>
+                  <!-- lid -->
+                  <path d="M3 6h14"/>
+                  <!-- body -->
+                  <path d="M5 6l1 11h8l1-11"/>
+                  <!-- inner lines -->
+                  <path d="M8.5 9v5M11.5 9v5"/>
+                </svg>
+              </button>
+            </div>
+
+          </div><!-- /q-table -->
+
+        </div><!-- /Title page section -->
+
+        <!-- Add new -->
+        <div class="add-new-wrap">
+          <button class="btn-add-new" onclick="openAddNewMenu(event, this)">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M8 3v10M3 8h10"/>
+            </svg>
+            Add new
+          </button>
+        </div>
+
+        <!-- ══ UNTITLED PAGE SECTION ═══════════════════════════ -->
+        <div class="section">
+          <div class="section-hdr">
+            <div class="section-hdr-left">
+              <button class="btn-chevron">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 6l4 4 4-4"/>
+                </svg>
+              </button>
+              <span class="section-title">Untitled page</span>
+              <button class="btn-edit-section" title="Rename">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/>
+                </svg>
+              </button>
+            </div>
+            <button class="btn-kebab-section" title="More">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="8" cy="3.5" r="1.3"/>
+                <circle cx="8" cy="8" r="1.3"/>
+                <circle cx="8" cy="12.5" r="1.3"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="section-desc">
+            This is where you add your inspection questions and how you want them answered. E.g. "Is the floor clean?"
+          </div>
+
+          <div class="q-table">
+            <div class="q-thead">
+              <div style="width:40px;min-width:40px;background:var(--bg-strong);"></div>
+              <div class="q-th-question">Question</div>
+              <div class="q-th-response">Response type</div>
+            </div>
+
+            <!-- Row: Yes/No/N/A -->
+            <div class="q-row" onclick="selectRow(this)">
+              <div class="q-cell-handle">
+                <svg class="drag-dots" width="12" height="18" viewBox="0 0 12 18" fill="currentColor">
+                  <circle cx="3" cy="4.5" r="1.5"/><circle cx="9" cy="4.5" r="1.5"/>
+                  <circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/>
+                  <circle cx="3" cy="13.5" r="1.5"/><circle cx="9" cy="13.5" r="1.5"/>
+                </svg>
+              </div>
+              <div class="q-cell-question">
+                <div class="q-label-wrap">
+                  <input class="q-input" type="text" placeholder="Type question" />
+                </div>
+              </div>
+              <div class="q-cell-response">
+                <div class="yna-chips">
+                  <span class="chip chip-yes">Yes</span>
+                  <span class="chip chip-no">No</span>
+                  <span class="chip chip-na">N/A</span>
+                </div>
+                <svg class="q-type-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 6l4 4 4-4"/>
+                </svg>
+              </div>
+              <button class="q-delete" title="Delete row">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- lid handle -->
+                  <path d="M8 3h4"/>
+                  <!-- lid -->
+                  <path d="M3 6h14"/>
+                  <!-- body -->
+                  <path d="M5 6l1 11h8l1-11"/>
+                  <!-- inner lines -->
+                  <path d="M8.5 9v5M11.5 9v5"/>
+                </svg>
+              </button>
+            </div>
+
+          </div>
+
+        </div><!-- /Untitled page section -->
+
+        <!-- Add new -->
+        <div class="add-new-wrap">
+          <button class="btn-add-new" onclick="openAddNewMenu(event, this)">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M8 3v10M3 8h10"/>
+            </svg>
+            Add new
+          </button>
+        </div>
+
+      </div><!-- /canvas-inner -->
+    </div><!-- /canvas -->
+
+    <!-- ── Right panel: mobile preview ──────────────────────── -->
+    <div class="right-panel" id="right-panel">
+      <div class="right-panel-inner">
+        <!-- Phone UI -->
+        <div class="phone-ui">
+          <div class="phone-notch"></div>
+          <div class="phone-content">
+
+            <!-- Page nav -->
+            <div class="preview-page-nav">
+              <div class="preview-page-left">
+                <div class="preview-page-num">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 6l4 4 4-4"/>
+                  </svg>
+                  Page 2 of 3
+                </div>
+                <div class="preview-page-title">Page title</div>
+              </div>
+              <div class="preview-score-col">
+                <div class="preview-score-label">Score</div>
+                <div class="preview-score-val">0 / 0 (0.00%)</div>
+              </div>
+            </div>
+
+            <!-- Questions -->
+            <div class="preview-content">
+
+              <!-- Site conducted (required) -->
+              <div class="preview-card required">
+                <div class="preview-question">
+                  <div class="preview-q-label">
+                    <span class="preview-q-required">*&nbsp;</span>
+                    <span>Site conducted</span>
+                  </div>
+                  <div class="preview-input" style="border-color:var(--surface-border);">
+                    <span>Select</span>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 6l4 4 4-4"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Conducted on -->
+              <div class="preview-card">
+                <div class="preview-question">
+                  <div class="preview-q-label">Conducted on</div>
+                  <div class="preview-input">
+                    <span>Enter date and time</span>
+                  </div>
+                  <div class="preview-actions">
+                    <button class="preview-action-btn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="12" height="12" rx="1.5"/>
+                        <path d="M5 7h6M5 10h4M9 4h2l1 1v1"/>
+                      </svg>
+                      Note
+                    </button>
+                    <button class="preview-action-btn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1.5" y="3.5" width="13" height="10" rx="1.5"/>
+                        <circle cx="5.5" cy="7.5" r="1.5"/>
+                        <path d="M1.5 11.5l3.5-3.5 3 3 3-4 3.5 4"/>
+                      </svg>
+                      Media
+                    </button>
+                    <button class="preview-action-btn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="12" height="12" rx="1.5"/>
+                        <path d="M5 8h6M8 5v6"/>
+                      </svg>
+                      Action
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Prepared by -->
+              <div class="preview-card">
+                <div class="preview-question">
+                  <div class="preview-q-label">Prepared by</div>
+                  <div class="preview-input">
+                    <span>Tap here to edit</span>
+                  </div>
+                  <div class="preview-actions">
+                    <button class="preview-action-btn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="12" height="12" rx="1.5"/>
+                        <path d="M5 7h6M5 10h4M9 4h2l1 1v1"/>
+                      </svg>
+                      Note
+                    </button>
+                    <button class="preview-action-btn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1.5" y="3.5" width="13" height="10" rx="1.5"/>
+                        <circle cx="5.5" cy="7.5" r="1.5"/>
+                        <path d="M1.5 11.5l3.5-3.5 3 3 3-4 3.5 4"/>
+                      </svg>
+                      Media
+                    </button>
+                    <button class="preview-action-btn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="12" height="12" rx="1.5"/>
+                        <path d="M5 8h6M8 5v6"/>
+                      </svg>
+                      Action
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Location (partial) -->
+              <div class="preview-card">
+                <div class="preview-question">
+                  <div class="preview-q-label">Location</div>
+                  <div class="preview-input">
+                    <span>Tap here to edit</span>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /preview-content -->
+          </div><!-- /phone-content -->
+        </div><!-- /phone-ui -->
+      </div><!-- /right-panel-inner -->
+    </div><!-- /right-panel -->
+
+  </div><!-- /body -->
+
+  <!-- ═══ ROW FLOAT PANEL ═════════════════════════════════════ -->
+  <div class="row-float-panel" id="row-float-panel">
+    <!-- Question button -->
+    <button class="row-float-btn" onclick="addNewQuestion()" title="Add question">
+      <div class="row-float-icon">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round">
+          <path d="M10 4v12M4 10h12"/>
+        </svg>
+      </div>
+      <span class="row-float-label">Question</span>
+    </button>
+    <!-- Section button -->
+    <button class="row-float-btn" title="Add section">
+      <div class="row-float-icon">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+          <rect x="2" y="3" width="16" height="6" rx="1.5" fill="#675df4"/>
+          <rect x="2" y="11" width="16" height="6" rx="1.5" fill="#675df4"/>
+        </svg>
+      </div>
+      <span class="row-float-label">Section</span>
+    </button>
+  </div>
+
+  <!-- ═══ ADD NEW MENU ════════════════════════════════════════ -->
+  <div class="add-new-menu" id="add-new-menu">
+
+    <button class="add-menu-item" onclick="addNewQuestion()">
+      <span class="add-menu-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.5 9.5a3 3 0 0 1 5.5 1c0 2-3 3-3 3M12 17h.01"/>
+        </svg>
+      </span>
+      <span class="add-menu-text">
+        <span class="add-menu-title">Question</span>
+        <span class="add-menu-desc">Select a response type to capture information</span>
+      </span>
+    </button>
+
+    <button class="add-menu-item">
+      <span class="add-menu-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="7" rx="2"/>
+          <rect x="2" y="14" width="20" height="7" rx="2"/>
+        </svg>
+      </span>
+      <span class="add-menu-text">
+        <span class="add-menu-title">Section</span>
+        <span class="add-menu-desc">Group related questions together within a section</span>
+      </span>
+    </button>
+
+    <button class="add-menu-item" onclick="addNewPage()">
+      <span class="add-menu-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6"/>
+        </svg>
+      </span>
+      <span class="add-menu-text">
+        <span class="add-menu-title">Page</span>
+        <span class="add-menu-desc">Organise your template with multiple pages</span>
+      </span>
+    </button>
+
+    <button class="add-menu-item">
+      <span class="add-menu-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M3 9h18M3 15h18M9 3v18"/>
+        </svg>
+      </span>
+      <span class="add-menu-text">
+        <span class="add-menu-title">Table</span>
+        <span class="add-menu-desc">Collect multiple responses in a structured tabular format</span>
+      </span>
+    </button>
+
+  </div>
+
+  <!-- ═══ RESPONSE TYPE DROPDOWN ══════════════════════════════ -->
+  <div class="rt-dropdown" id="rt-dropdown">
+
+    <!-- Left: search + multiple choice + GRS -->
+    <div class="rt-dd-left">
+      <div class="rt-dd-search-wrap">
+        <input class="rt-dd-search" type="text" placeholder="Search" id="rt-search" oninput="filterRtOptions(this.value)" />
+      </div>
+      <div class="rt-dd-scroll" id="rt-dd-left-scroll">
+
+        <div class="rt-dd-section-label">
+          Multiple choice responses
+          <a href="#">+ Responses</a>
+        </div>
+
+        <div class="rt-mc-row selected" data-type="Yes / No / N/A" data-icon="yna" onclick="selectResponseType(this)">
+          <div class="rt-mc-chips">
+            <span class="rt-mc-chip rt-chip-yes">Yes</span>
+            <span class="rt-mc-chip rt-chip-no">No</span>
+            <span class="rt-mc-chip rt-chip-na">N/A</span>
+          </div>
+          <span class="rt-mc-edit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/></svg></span>
+        </div>
+
+        <div class="rt-mc-row" data-type="Good / Fair / Poor" data-icon="mc-gfp" onclick="selectResponseType(this)">
+          <div class="rt-mc-chips">
+            <span class="rt-mc-chip rt-chip-good">Good</span>
+            <span class="rt-mc-chip rt-chip-fair">Fair</span>
+            <span class="rt-mc-chip rt-chip-poor">Poor</span>
+            <span class="rt-mc-chip rt-chip-na">N/A</span>
+          </div>
+          <span class="rt-mc-edit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/></svg></span>
+        </div>
+
+        <div class="rt-mc-row" data-type="Safe / At Risk" data-icon="mc-sar" onclick="selectResponseType(this)">
+          <div class="rt-mc-chips">
+            <span class="rt-mc-chip rt-chip-safe">Safe</span>
+            <span class="rt-mc-chip rt-chip-atrisk">At Risk</span>
+            <span class="rt-mc-chip rt-chip-na">N/A</span>
+          </div>
+          <span class="rt-mc-edit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/></svg></span>
+        </div>
+
+        <div class="rt-mc-row" data-type="Pass / Fail" data-icon="mc-pf" onclick="selectResponseType(this)">
+          <div class="rt-mc-chips">
+            <span class="rt-mc-chip rt-chip-pass">Pass</span>
+            <span class="rt-mc-chip rt-chip-fail">Fail</span>
+            <span class="rt-mc-chip rt-chip-na">N/A</span>
+          </div>
+          <span class="rt-mc-edit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/></svg></span>
+        </div>
+
+        <div class="rt-mc-row" data-type="Compliant / Non-Compliant" data-icon="mc-cnc" onclick="selectResponseType(this)">
+          <div class="rt-mc-chips">
+            <span class="rt-mc-chip rt-chip-compliant">Compliant</span>
+            <span class="rt-mc-chip rt-chip-noncompliant">Non-Compliant</span>
+            <span class="rt-mc-chip rt-chip-more">+1</span>
+          </div>
+          <span class="rt-mc-edit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/></svg></span>
+        </div>
+
+        <div class="rt-dd-section-label" style="margin-top:4px;">
+          Global Response Sets
+          <a href="#">+ Create</a>
+        </div>
+
+        <div class="rt-grs-row" data-type="HAZ Products" data-icon="grs" onclick="selectResponseType(this)">
+          <span class="rt-grs-label">HAZ Products</span>
+          <span class="rt-mc-edit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/></svg></span>
+        </div>
+
+        <div class="rt-grs-row" data-type="Employees" data-icon="grs" onclick="selectResponseType(this)">
+          <span class="rt-grs-label">Employees</span>
+          <span class="rt-mc-edit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/></svg></span>
+        </div>
+
+        <div class="rt-grs-row" data-type="GRS Transfer" data-icon="grs" onclick="selectResponseType(this)">
+          <span class="rt-grs-label">GRS transfer</span>
+          <span class="rt-mc-edit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/></svg></span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right: other response types -->
+    <div class="rt-dd-right">
+      <div class="rt-dd-section-label">Other responses</div>
+
+      <div class="rt-other-row" data-type="Text answer" data-icon="text" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#fff4e0;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><text x="3" y="15" font-family="serif" font-size="15" font-weight="700" fill="#e07b39">T</text></svg>
+        </div>
+        <span class="rt-other-label">Text answer</span>
+      </div>
+
+      <div class="rt-other-row" data-type="Number" data-icon="number" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#fff4e0;">
+          <svg width="18" height="18" viewBox="0 0 20 20"><text x="1" y="14" font-family="'Noto Sans',sans-serif" font-size="10" font-weight="700" fill="#e07b39">123</text></svg>
+        </div>
+        <span class="rt-other-label">Number</span>
+      </div>
+
+      <div class="rt-other-row" data-type="Checkbox" data-icon="checkbox" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#ecedfe;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" fill="#675df4"/><path d="M6 10l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="rt-other-label">Checkbox</span>
+      </div>
+
+      <div class="rt-divider"></div>
+
+      <div class="rt-other-row" data-type="Date &amp; Time" data-icon="datetime" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#dcfce7;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#16a34a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="1.5"/><path d="M6.5 2v3M13.5 2v3M2.5 8h15"/></svg>
+        </div>
+        <span class="rt-other-label">Date &amp; Time</span>
+      </div>
+
+      <div class="rt-other-row" data-type="Media" data-icon="media" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#cffafe;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#0891b2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="16" height="12" rx="1.5"/><circle cx="7" cy="8.5" r="1.8"/><path d="M2 14.5l4-4 4 4 3-4 5 4"/></svg>
+        </div>
+        <span class="rt-other-label">Media</span>
+      </div>
+
+      <div class="rt-other-row" data-type="Slider" data-icon="slider" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#dcfce7;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#16a34a" stroke-width="1.6" stroke-linecap="round"><path d="M3 7h14M3 13h14"/><circle cx="7" cy="7" r="2.5" fill="#16a34a" stroke="none"/><circle cx="13" cy="13" r="2.5" fill="#16a34a" stroke="none"/></svg>
+        </div>
+        <span class="rt-other-label">Slider</span>
+      </div>
+
+      <div class="rt-other-row" data-type="Annotation" data-icon="annotation" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#fff4e0;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#e07b39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3a2 2 0 0 1 3 3l-9 9H5v-3l9-9z"/></svg>
+        </div>
+        <span class="rt-other-label">Annotation</span>
+      </div>
+
+      <div class="rt-other-row" data-type="Signature" data-icon="signature" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#cffafe;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#0891b2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c2-4 3-7 5-7s2 4 4 4 3-3 5-5M3 17h14"/></svg>
+        </div>
+        <span class="rt-other-label">Signature</span>
+      </div>
+
+      <div class="rt-other-row" data-type="Location" data-icon="location" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#fff4e0;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#e07b39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2a6 6 0 0 0-6 6c0 5 6 12 6 12s6-7 6-12a6 6 0 0 0-6-6z"/><circle cx="10" cy="8" r="2.2"/></svg>
+        </div>
+        <span class="rt-other-label">Location</span>
+      </div>
+
+      <div class="rt-divider"></div>
+
+      <div class="rt-other-row" data-type="Instruction" data-icon="instruction" onclick="selectResponseType(this)">
+        <div class="rt-other-icon" style="background:#ecedfe;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#675df4" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 6.5h.01"/></svg>
+        </div>
+        <span class="rt-other-label">Instruction</span>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ── Row selection ──────────────────────────────────────────────
+// ── Delete row ─────────────────────────────────────────────────
+function deleteRow(btn) {
+  const row = btn.closest('.q-row');
+  if (!row) return;
+  btn.classList.remove('visible');
+  hideRowFloatPanel();
+  row.remove();
+}
+
+// Wire up delete buttons on existing rows
+document.querySelectorAll('.q-delete').forEach(btn => {
+  btn.addEventListener('click', e => { e.stopPropagation(); deleteRow(btn); });
+});
+
+// ── Rename section title ───────────────────────────────────────
+function startRename(btn) {
+  const hdrLeft = btn.closest('.section-hdr-left');
+  if (!hdrLeft) return;
+  const titleSpan = hdrLeft.querySelector('.section-title');
+  if (!titleSpan || titleSpan.style.display === 'none') return; // already editing
+
+  const currentText = titleSpan.textContent;
+
+  // Swap span → input
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'section-title-input';
+  input.value = currentText;
+  // Size input to content
+  input.style.width = Math.max(titleSpan.offsetWidth, 40) + 'px';
+
+  titleSpan.style.display = 'none';
+  titleSpan.insertAdjacentElement('afterend', input);
+  input.focus();
+  input.select();
+
+  function commit() {
+    const newText = input.value.trim() || currentText;
+    titleSpan.textContent = newText;
+    titleSpan.style.display = '';
+    input.remove();
+  }
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = currentText; input.blur(); }
+    // Resize as user types
+    input.style.width = Math.max(input.scrollWidth, 40) + 'px';
+  });
+  input.addEventListener('input', () => {
+    input.style.width = '4px';
+    input.style.width = Math.max(input.scrollWidth, 40) + 'px';
+  });
+}
+
+// Wire up all existing rename buttons
+document.querySelectorAll('.btn-edit-section').forEach(btn => {
+  btn.addEventListener('click', e => { e.stopPropagation(); startRename(btn); });
+});
+
+// ── Rename template title ──────────────────────────────────────
+const editTemplateNameBtn = document.querySelector('.btn-edit-template-name');
+if (editTemplateNameBtn) {
+  editTemplateNameBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const nameRow = editTemplateNameBtn.closest('.template-name-row');
+    const titleSpan = nameRow.querySelector('.template-name');
+    if (!titleSpan || titleSpan.style.display === 'none') return;
+
+    const currentText = titleSpan.textContent;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'template-name-input';
+    input.value = currentText;
+    input.style.width = Math.max(titleSpan.offsetWidth, 40) + 'px';
+
+    titleSpan.style.display = 'none';
+    titleSpan.insertAdjacentElement('afterend', input);
+    input.focus();
+    input.select();
+
+    function commit() {
+      const newText = input.value.trim() || currentText;
+      titleSpan.textContent = newText;
+      titleSpan.style.display = '';
+      input.remove();
+    }
+
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape') { input.value = currentText; input.blur(); }
+    });
+    input.addEventListener('input', () => {
+      input.style.width = '4px';
+      input.style.width = Math.max(input.scrollWidth, 40) + 'px';
+    });
+  });
+}
+
+const rowFloatPanel = document.getElementById('row-float-panel');
+
+function positionRowFloatPanel(row) {
+  const rect    = row.getBoundingClientRect();
+  const panelH  = rowFloatPanel.offsetHeight;
+  const panelW  = rowFloatPanel.offsetWidth;
+
+  // Vertically centre on the row (clamped to viewport)
+  let top = rect.top + (rect.height / 2) - (panelH / 2);
+  top = Math.max(8, Math.min(top, window.innerHeight - panelH - 8));
+
+  // Place to the left of the row with a small gap
+  const left = rect.left - panelW - 10;
+
+  rowFloatPanel.style.top  = top  + 'px';
+  rowFloatPanel.style.left = Math.max(4, left) + 'px';
+}
+
+function positionDeleteBtn(row) {
+  const btn = row.querySelector('.q-delete');
+  if (!btn) return;
+  const rect = row.getBoundingClientRect();
+  btn.style.top  = (rect.top + rect.height / 2 - 20) + 'px';
+  btn.style.left = (rect.right + 10) + 'px';
+}
+
+function showRowFloatPanel(row) {
+  rowFloatPanel.classList.add('visible');
+  positionRowFloatPanel(row);
+  // Show this row's delete button
+  document.querySelectorAll('.q-delete').forEach(b => b.classList.remove('visible'));
+  const btn = row.querySelector('.q-delete');
+  if (btn) { btn.classList.add('visible'); positionDeleteBtn(row); }
+}
+
+function hideRowFloatPanel() {
+  rowFloatPanel.classList.remove('visible');
+  document.querySelectorAll('.q-delete').forEach(b => b.classList.remove('visible'));
+}
+
+function selectRow(row) {
+  document.querySelectorAll('.q-row').forEach(r => {
+    r.classList.remove('active');
+    const inp = r.querySelector('.q-input');
+    if (inp) inp.classList.remove('active');
+  });
+  row.classList.add('active');
+  const inp = row.querySelector('.q-input');
+  if (inp) { inp.classList.add('active'); inp.focus(); }
+  showRowFloatPanel(row);
+}
+
+// Click outside to deselect
+document.querySelector('.canvas').addEventListener('click', function(e) {
+  if (!e.target.closest('.q-row') && !e.target.closest('.rt-dropdown') && !e.target.closest('.row-float-panel')) {
+    document.querySelectorAll('.q-row').forEach(r => {
+      r.classList.remove('active');
+      const inp = r.querySelector('.q-input');
+      if (inp) inp.classList.remove('active');
+    });
+    hideRowFloatPanel();
+  }
+});
+
+// Reposition panel + delete btn on scroll
+document.querySelector('.canvas').addEventListener('scroll', () => {
+  const active = document.querySelector('.q-row.active');
+  if (active) {
+    positionRowFloatPanel(active);
+    positionDeleteBtn(active);
+  }
+}, { passive: true });
+
+// ── Tab switching ──────────────────────────────────────────────
+document.querySelectorAll('.topbar-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.topbar-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+
+// ── Preview panel toggle ───────────────────────────────────────
+function hidePreview() {
+  document.getElementById('right-panel').classList.add('collapsed');
+  document.getElementById('btn-hide-preview').classList.add('hidden');
+  document.getElementById('btn-show-preview').classList.remove('hidden');
+}
+
+function showPreview() {
+  document.getElementById('right-panel').classList.remove('collapsed');
+  document.getElementById('btn-show-preview').classList.add('hidden');
+  document.getElementById('btn-hide-preview').classList.remove('hidden');
+}
+
+// ── Add new question row ───────────────────────────────────────
+function addNewQuestion() {
+  // Capture the button reference BEFORE closeAddNewMenu() nulls it
+  const triggerBtn = activeAddBtn;
+  closeAddNewMenu();
+
+  // Find the correct section:
+  // 1. If triggered from an "Add new" button — the section is the previous sibling of its wrapper
+  // 2. If triggered from the row float panel — use the section containing the active row
+  // 3. Fallback — last section on the page
+  let targetSection = null;
+
+  if (triggerBtn && triggerBtn.classList.contains('btn-add-new')) {
+    // add-new-wrap sits directly after its section as a sibling inside canvas-inner
+    const wrap = triggerBtn.closest('.add-new-wrap');
+    if (wrap) targetSection = wrap.previousElementSibling;
+  }
+
+  if (!targetSection) {
+    const activeRow = document.querySelector('.q-row.active');
+    if (activeRow) targetSection = activeRow.closest('.section');
+  }
+
+  if (!targetSection) {
+    const allSections = document.querySelectorAll('.section');
+    targetSection = allSections[allSections.length - 1];
+  }
+
+  const table = targetSection ? targetSection.querySelector('.q-table') : null;
+  if (!table) return;
+
+  const row = document.createElement('div');
+  row.className = 'q-row';
+  row.innerHTML = `
+    <div class="q-cell-handle">
+      <svg class="drag-dots" width="12" height="18" viewBox="0 0 12 18" fill="currentColor">
+        <circle cx="3" cy="4.5" r="1.5"/><circle cx="9" cy="4.5" r="1.5"/>
+        <circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/>
+        <circle cx="3" cy="13.5" r="1.5"/><circle cx="9" cy="13.5" r="1.5"/>
+      </svg>
+    </div>
+    <div class="q-cell-question">
+      <div class="q-label-wrap">
+        <input class="q-input" type="text" placeholder="Type question" />
+      </div>
+    </div>
+    <div class="q-cell-response">
+      <div class="yna-chips">
+        <span class="chip chip-yes">Yes</span>
+        <span class="chip chip-no">No</span>
+        <span class="chip chip-na">N/A</span>
+      </div>
+      <svg class="q-type-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6l4 4 4-4"/>
+      </svg>
+    </div>
+    <button class="q-delete" title="Delete row">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3h4"/>
+        <path d="M3 6h14"/>
+        <path d="M5 6l1 11h8l1-11"/>
+        <path d="M8.5 9v5M11.5 9v5"/>
+      </svg>
+    </button>`;
+
+  row.addEventListener('click', () => selectRow(row));
+
+  // Wire up delete button
+  const delBtn = row.querySelector('.q-delete');
+  if (delBtn) delBtn.addEventListener('click', e => { e.stopPropagation(); deleteRow(delBtn); });
+
+  // Wire up the response cell for the dropdown
+  row.querySelector('.q-cell-response').addEventListener('click', e => {
+    e.stopPropagation();
+    selectRow(row);
+    openResponseDropdown(row.querySelector('.q-cell-response'));
+  });
+
+  // Append before the last row (if it's an empty placeholder), or at the end
+  table.appendChild(row);
+
+  // Select and focus the new row
+  selectRow(row);
+  const input = row.querySelector('.q-input');
+  if (input) { input.focus(); }
+
+  // Scroll into view
+  row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Add new page block ─────────────────────────────────────────
+function addNewPage() {
+  const triggerBtn = activeAddBtn;
+  closeAddNewMenu();
+
+  // Find the add-new-wrap to insert after
+  let insertAfterWrap = null;
+  if (triggerBtn && triggerBtn.classList.contains('btn-add-new')) {
+    insertAfterWrap = triggerBtn.closest('.add-new-wrap');
+  }
+  if (!insertAfterWrap) {
+    const wraps = document.querySelectorAll('.add-new-wrap');
+    insertAfterWrap = wraps[wraps.length - 1];
+  }
+
+  const canvasInner = insertAfterWrap ? insertAfterWrap.parentElement : document.querySelector('.canvas-inner');
+
+  // ── Build the new section ──
+  const section = document.createElement('div');
+  section.className = 'section';
+  section.innerHTML = `
+    <div class="section-hdr">
+      <div class="section-hdr-left">
+        <button class="btn-chevron">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 6l4 4 4-4"/>
+          </svg>
+        </button>
+        <span class="section-title">Untitled page</span>
+        <button class="btn-edit-section" title="Rename">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11.5 2.5a2.12 2.12 0 0 1 3 3L5 15H2v-3L11.5 2.5z"/>
+          </svg>
+        </button>
+      </div>
+      <button class="btn-kebab-section" title="More">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <circle cx="8" cy="3.5" r="1.3"/>
+          <circle cx="8" cy="8" r="1.3"/>
+          <circle cx="8" cy="12.5" r="1.3"/>
+        </svg>
+      </button>
+    </div>
+    <div class="section-desc">
+      This is where you add your inspection questions and how you want them answered. E.g. "Is the floor clean?"
+    </div>
+    <div class="q-table">
+      <div class="q-thead">
+        <div style="width:40px;min-width:40px;background:var(--bg-strong);"></div>
+        <div class="q-th-question">Question</div>
+        <div class="q-th-response">Response type</div>
+      </div>
+    </div>`;
+
+  // ── Build the Add new wrap for this new page ──
+  const newWrap = document.createElement('div');
+  newWrap.className = 'add-new-wrap';
+  newWrap.innerHTML = `
+    <button class="btn-add-new">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M8 3v10M3 8h10"/>
+      </svg>
+      Add new
+    </button>`;
+
+  // Insert: section then its add-new-wrap, right after the triggering wrap
+  insertAfterWrap.insertAdjacentElement('afterend', newWrap);
+  insertAfterWrap.insertAdjacentElement('afterend', section);
+
+  // Wire up the new Add new button
+  const newAddBtn = newWrap.querySelector('.btn-add-new');
+  newAddBtn.addEventListener('click', e => openAddNewMenu(e, newAddBtn));
+
+  // Wire up rename button on the newly created section
+  const editBtn = section.querySelector('.btn-edit-section');
+  if (editBtn) editBtn.addEventListener('click', e => { e.stopPropagation(); startRename(editBtn); });
+
+  // Add the initial question row into the new section's table
+  const table = section.querySelector('.q-table');
+  const row = document.createElement('div');
+  row.className = 'q-row';
+  row.innerHTML = `
+    <div class="q-cell-handle">
+      <svg class="drag-dots" width="12" height="18" viewBox="0 0 12 18" fill="currentColor">
+        <circle cx="3" cy="4.5" r="1.5"/><circle cx="9" cy="4.5" r="1.5"/>
+        <circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/>
+        <circle cx="3" cy="13.5" r="1.5"/><circle cx="9" cy="13.5" r="1.5"/>
+      </svg>
+    </div>
+    <div class="q-cell-question">
+      <div class="q-label-wrap">
+        <input class="q-input" type="text" placeholder="Type question" />
+      </div>
+    </div>
+    <div class="q-cell-response">
+      <div class="yna-chips">
+        <span class="chip chip-yes">Yes</span>
+        <span class="chip chip-no">No</span>
+        <span class="chip chip-na">N/A</span>
+      </div>
+      <svg class="q-type-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6l4 4 4-4"/>
+      </svg>
+    </div>
+    <button class="q-delete" title="Delete row">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3h4"/>
+        <path d="M3 6h14"/>
+        <path d="M5 6l1 11h8l1-11"/>
+        <path d="M8.5 9v5M11.5 9v5"/>
+      </svg>
+    </button>`;
+
+  row.addEventListener('click', () => selectRow(row));
+  const delBtn = row.querySelector('.q-delete');
+  if (delBtn) delBtn.addEventListener('click', e => { e.stopPropagation(); deleteRow(delBtn); });
+  row.querySelector('.q-cell-response').addEventListener('click', e => {
+    e.stopPropagation();
+    selectRow(row);
+    openResponseDropdown(row.querySelector('.q-cell-response'));
+  });
+
+  table.appendChild(row);
+
+  // Select the new row and scroll into view
+  selectRow(row);
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Add new menu ───────────────────────────────────────────────
+const addNewMenu = document.getElementById('add-new-menu');
+let activeAddBtn = null;
+
+function openAddNewMenu(e, btn) {
+  e.stopPropagation();
+
+  // Toggle off if same button clicked again
+  if (activeAddBtn === btn && addNewMenu.classList.contains('open')) {
+    closeAddNewMenu(); return;
+  }
+  activeAddBtn = btn;
+
+  addNewMenu.style.visibility = 'hidden';
+  addNewMenu.classList.add('open');
+
+  const rect  = btn.getBoundingClientRect();
+  const menuW = 280;
+  const menuH = addNewMenu.offsetHeight;
+  const vpW   = window.innerWidth;
+  const vpH   = window.innerHeight;
+  const edge  = 8;
+
+  // Horizontal: align to button left, clamp
+  let left = rect.left;
+  if (left + menuW > vpW - edge) left = vpW - menuW - edge;
+  if (left < edge) left = edge;
+
+  // Vertical: prefer above the button (matches typical "add" menus), else below
+  let top;
+  if (rect.top - menuH - 4 >= edge) {
+    top = rect.top - menuH - 4;
+  } else {
+    top = rect.bottom + 4;
+  }
+
+  addNewMenu.style.left = left + 'px';
+  addNewMenu.style.top  = top  + 'px';
+  addNewMenu.style.visibility = '';
+}
+
+function closeAddNewMenu() {
+  addNewMenu.classList.remove('open');
+  activeAddBtn = null;
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.add-new-menu') && !e.target.closest('.btn-add-new')) {
+    closeAddNewMenu();
+  }
+});
+
+// ── Response type dropdown ─────────────────────────────────────
+let activeResponseCell = null;
+const dd = document.getElementById('rt-dropdown');
+
+// Icon HTML map keyed by data-icon value
+const iconMap = {
+  yna: `<div class="yna-chips"><span class="chip chip-yes">Yes</span><span class="chip chip-no">No</span><span class="chip chip-na">N/A</span></div>`,
+  'mc-gfp': `<div class="yna-chips"><span class="chip chip-yes" style="background:#d1fae5;color:#065f46">Good</span><span class="chip chip-na" style="background:#fef9c3;color:#854d0e">Fair</span><span class="chip chip-no">Poor</span></div>`,
+  'mc-sar': `<div class="yna-chips"><span class="chip chip-yes" style="background:#d1fae5;color:#065f46">Safe</span><span class="chip chip-no">At Risk</span></div>`,
+  'mc-pf':  `<div class="yna-chips"><span class="chip chip-yes" style="background:#d1fae5;color:#065f46">Pass</span><span class="chip chip-no">Fail</span></div>`,
+  'mc-cnc': `<div class="yna-chips"><span class="chip chip-yes" style="background:#d1fae5;color:#065f46">Compliant</span><span class="chip chip-no" style="font-size:11px">Non-Compliant</span></div>`,
+  grs: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#3f495a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M2 10h16M10 2c-2.5 3-4 5-4 8s1.5 5 4 8M10 2c2.5 3 4 5 4 8s-1.5 5-4 8"/></svg>`,
+  text:       `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#e07b39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12M4 10h8M4 14h10"/></svg>`,
+  number:     `<svg width="20" height="20" viewBox="0 0 20 20"><text x="2" y="14" font-family="'Noto Sans',sans-serif" font-size="10" font-weight="700" fill="#e07b39">123</text></svg>`,
+  checkbox:   `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" fill="#675df4"/><path d="M6 10l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  datetime:   `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#16a34a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="1.5"/><path d="M6.5 2v3M13.5 2v3M2.5 8h15"/></svg>`,
+  media:      `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#0891b2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="16" height="12" rx="1.5"/><circle cx="7" cy="8.5" r="1.8"/><path d="M2 14.5l4-4 4 4 3-4 5 4"/></svg>`,
+  slider:     `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#16a34a" stroke-width="1.6" stroke-linecap="round"><path d="M3 7h14M3 13h14"/><circle cx="7" cy="7" r="2.5" fill="#16a34a" stroke="none"/><circle cx="13" cy="13" r="2.5" fill="#16a34a" stroke="none"/></svg>`,
+  annotation: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#e07b39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3a2 2 0 0 1 3 3l-9 9H5v-3l9-9z"/></svg>`,
+  signature:  `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#0891b2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c2-4 3-7 5-7s2 4 4 4 3-3 5-5M3 17h14"/></svg>`,
+  location:   `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#e07b39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2a6 6 0 0 0-6 6c0 5 6 12 6 12s6-7 6-12a6 6 0 0 0-6-6z"/><circle cx="10" cy="8" r="2.2"/></svg>`,
+  instruction:`<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#675df4" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 6.5h.01"/></svg>`,
+};
+
+// Open dropdown anchored to a response cell
+function openResponseDropdown(cell) {
+  if (activeResponseCell === cell) { closeResponseDropdown(); return; }
+  activeResponseCell = cell;
+
+  // Show the dropdown (hidden off-screen first so we can measure it)
+  dd.style.visibility = 'hidden';
+  dd.style.maxHeight  = '';
+  dd.classList.add('open');
+
+  const rect  = cell.getBoundingClientRect();
+  const ddW   = Math.min(620, window.innerWidth - 16);
+  const vpW   = window.innerWidth;
+  const vpH   = window.innerHeight;
+  const gap   = 4;
+  const edge  = 8; // min margin from viewport edges
+
+  // ── Horizontal: align to cell left, clamp to viewport ─────
+  let left = rect.left;
+  if (left + ddW > vpW - edge) left = vpW - ddW - edge;
+  if (left < edge) left = edge;
+
+  // ── Vertical: prefer below, flip above if not enough room ──
+  const spaceBelow = vpH - rect.bottom - gap - edge;
+  const spaceAbove = rect.top - gap - edge;
+  const ddNatH = dd.offsetHeight; // natural height before clamping
+
+  let top, maxH;
+  if (spaceBelow >= ddNatH || spaceBelow >= spaceAbove) {
+    // Position below
+    top  = rect.bottom + gap;
+    maxH = Math.min(ddNatH, spaceBelow);
+  } else {
+    // Flip above
+    maxH = Math.min(ddNatH, spaceAbove);
+    top  = rect.top - gap - maxH;
+  }
+
+  dd.style.left      = left + 'px';
+  dd.style.top       = top  + 'px';
+  dd.style.maxHeight = maxH + 'px';
+  dd.style.visibility = '';
+
+  // Make the inner scroll areas fill available height
+  const leftScroll  = document.getElementById('rt-dd-left-scroll');
+  const rightScroll = dd.querySelector('.rt-dd-right');
+  const searchH     = dd.querySelector('.rt-dd-search-wrap').offsetHeight;
+  const scrollH     = maxH - searchH - 2; // 2 for borders
+  leftScroll.style.maxHeight  = scrollH + 'px';
+  rightScroll.style.maxHeight = maxH    + 'px';
+
+  // Mark the current type as selected
+  const currentLabel = cell.querySelector('.q-type-label');
+  const yna = cell.querySelector('.yna-chips');
+  const currentType = currentLabel ? currentLabel.textContent.trim() : (yna ? 'Yes / No / N/A' : '');
+  document.querySelectorAll('.rt-mc-row, .rt-grs-row, .rt-other-row').forEach(row => {
+    row.classList.toggle('selected', row.dataset.type === currentType);
+  });
+
+  // Reset search
+  document.getElementById('rt-search').value = '';
+  filterRtOptions('');
+}
+
+function closeResponseDropdown() {
+  dd.classList.remove('open');
+  activeResponseCell = null;
+}
+
+// Wire up all response cells
+document.querySelectorAll('.q-cell-response').forEach(cell => {
+  cell.addEventListener('click', e => {
+    e.stopPropagation();
+    selectRow(cell.closest('.q-row'));
+    openResponseDropdown(cell);
+  });
+});
+
+// Close on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.rt-dropdown') && !e.target.closest('.q-cell-response')) {
+    closeResponseDropdown();
+  }
+});
+
+// Select a response type
+function selectResponseType(optionRow) {
+  if (!activeResponseCell) return;
+
+  const type  = optionRow.dataset.type;
+  const icon  = optionRow.dataset.icon;
+  const iconHTML = iconMap[icon] || '';
+
+  // Update the cell
+  const iconEl  = activeResponseCell.querySelector('.q-type-icon');
+  const labelEl = activeResponseCell.querySelector('.q-type-label');
+  const ynaEl   = activeResponseCell.querySelector('.yna-chips');
+
+  // YNA / MC types replace the icon+label area differently
+  const isMC = ['yna','mc-gfp','mc-sar','mc-pf','mc-cnc'].includes(icon);
+
+  if (isMC) {
+    // Show chips, hide label
+    if (ynaEl) {
+      ynaEl.outerHTML = iconHTML; // swap chips content
+    } else if (iconEl) {
+      iconEl.outerHTML = `<span class="q-type-icon"></span>`;
+      // inject before chevron
+      const chevron = activeResponseCell.querySelector('.q-type-chevron');
+      const chipsWrap = document.createElement('div');
+      chipsWrap.className = 'yna-chips';
+      chipsWrap.innerHTML = iconHTML.replace(/<div[^>]*>|<\/div>/g,'');
+      activeResponseCell.insertBefore(chipsWrap, chevron);
+    }
+    if (labelEl) labelEl.style.display = 'none';
+    const existingYna = activeResponseCell.querySelector('.yna-chips');
+    if (existingYna) existingYna.innerHTML = iconHTML.replace(/<div[^>]*>|<\/div>/g,'');
+  } else {
+    // Remove any chips
+    const existingYna = activeResponseCell.querySelector('.yna-chips');
+    if (existingYna) existingYna.remove();
+
+    // Ensure icon + label elements exist
+    let icon2 = activeResponseCell.querySelector('.q-type-icon');
+    let label2 = activeResponseCell.querySelector('.q-type-label');
+    const chevron = activeResponseCell.querySelector('.q-type-chevron');
+
+    if (!icon2) {
+      icon2 = document.createElement('span');
+      icon2.className = 'q-type-icon';
+      activeResponseCell.insertBefore(icon2, chevron);
+    }
+    if (!label2) {
+      label2 = document.createElement('span');
+      label2.className = 'q-type-label';
+      activeResponseCell.insertBefore(label2, chevron);
+    }
+    icon2.style.display = '';
+    label2.style.display = '';
+    icon2.innerHTML = iconHTML;
+    label2.textContent = type;
+  }
+
+  // Highlight selected in menu
+  document.querySelectorAll('.rt-mc-row, .rt-grs-row, .rt-other-row').forEach(r => r.classList.remove('selected'));
+  optionRow.classList.add('selected');
+
+  closeResponseDropdown();
+}
+
+// Filter options by search text
+function filterRtOptions(val) {
+  const q = val.toLowerCase();
+  document.querySelectorAll('.rt-mc-row, .rt-grs-row, .rt-other-row').forEach(row => {
+    const text = row.dataset.type ? row.dataset.type.toLowerCase() : row.textContent.toLowerCase();
+    row.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
